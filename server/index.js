@@ -1,3 +1,5 @@
+import "./index.css";
+
 require("dotenv").config();   // loads environment variables
 
 // import core dependencies
