@@ -2,13 +2,15 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 import Home from "./pages/Home";
 import Login from "./pages/Login";
 import Trips from "./pages/Trips";
+import { Toaster } from "sonner";
 
-import logo from './logo.svg';
 import './App.css';
 
 function App() {
   return (
+    
     <BrowserRouter>
+      <Toaster richColors position="top-right" />
       <Routes>
         <Route path="/" element={<Login />} />
         <Route path="/home" element={<Home />} />
