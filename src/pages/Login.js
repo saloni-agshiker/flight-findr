@@ -31,7 +31,7 @@ export default function Login() {
     setError("");
 
     try {
-      const res = await fetch("/api/auth/login", {
+      const res = await fetch("http://localhost:5001/api/auth/login", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ loginEmail, loginPassword })
@@ -48,7 +48,7 @@ export default function Login() {
 
       alert("Logged in!");
     } catch (err) {
-      setError(err.message);
+      alert(err.message);
     } finally {
       setIsLoading(false);
     }
@@ -60,7 +60,7 @@ export default function Login() {
     setError("");
 
     try {
-      const res = await fetch("/api/auth/signup", {
+      const res = await fetch("http://localhost:5001/api/auth/signup", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ signupEmail, signupPassword, signupName, signupConfirmPassword})

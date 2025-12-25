@@ -1,5 +1,3 @@
-import "./index.css";
-
 require("dotenv").config();   // loads environment variables
 
 // import core dependencies
@@ -16,6 +14,11 @@ const app = express();
 // enables middleware
 app.use(cors({ origin: "http://localhost:3000", credentials: true }));
 app.use(express.json());
+
+// health check - remove
+app.get("/health", (req, res) => {
+  res.send("OK");
+});
 
 // registers routes
 app.use("/api/auth", authRoutes);

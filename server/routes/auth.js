@@ -21,7 +21,16 @@ router.post("/signup", async (req, res) => {
     const passwordHash = await bcrypt.hash(signupPassword, 12);
     const user = await User.create({ email, passwordHash, name: signupName });
 
-    return res.status(201).json({ id: user._id, email: user.email, name: user.name });
+    const token = jwt.sign(
+      { sub: user._id.toString(), email: user.email },
+      process.env.JWT_SECRET,
+      { expiresIn: "7d" }
+    );
+
+    return res.status(201).json({
+      token,
+      user: { id: user._id, email: user.email, name: user.name }
+    });
   } catch (err) {
     return res.status(500).json({ message: "Server error" });
   }
@@ -45,7 +54,7 @@ router.post("/login", async (req, res) => {
       { expiresIn: "7d" }
     );
 
-    return res.json({
+    return res.status(201).json({
       token,
       user: { id: user._id, email: user.email, name: user.name }
     });
