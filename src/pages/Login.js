@@ -8,12 +8,15 @@ import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } f
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "../ui/card";
 import { toast } from "sonner";
 import { useNavigate } from "react-router-dom";
+import { useAuth } from "../context/AuthContext";
+
 
 
 export default function Login() {
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState("");
+  const { user, login, logout } = useAuth();
 
   // Login form state
   const [loginEmail, setLoginEmail] = useState("");
@@ -48,8 +51,7 @@ export default function Login() {
       if (!res.ok) throw new Error(data.message || "Login failed");
 
       // Save token (simple approach)
-      localStorage.setItem("token", data.token);
-      localStorage.setItem("user", JSON.stringify(data.user));
+      login(data.user, data.token);
 
       const user = JSON.parse(localStorage.getItem("user"));
       toast.success(`Welcome back, ${user?.name ?? ""}!`);
@@ -78,8 +80,7 @@ export default function Login() {
       if (!res.ok) throw new Error(data.message || "Signup failed");
 
       // Save token (simple approach)
-      localStorage.setItem("token", data.token);
-      localStorage.setItem("user", JSON.stringify(data.user));
+      login(data.user, data.token);
 
       const user = JSON.parse(localStorage.getItem("user"));
       toast.success(`Welcome, ${user?.name ?? ""}!`);

@@ -8,6 +8,8 @@ const router = express.Router();
 
 // Signup route - when server receives POST /api/auth/signup
 router.post("/signup", async (req, res) => {
+  
+
   try {
     const { signupName, signupEmail, signupPassword, signupConfirmPassword } = req.body;
     if (!signupName || !signupEmail || !signupPassword) return res.status(400).json({ message: "Name, email, and password required" });
@@ -19,7 +21,8 @@ router.post("/signup", async (req, res) => {
     if (existing) return res.status(409).json({ message: "Email already in use" });
 
     const passwordHash = await bcrypt.hash(signupPassword, 12);
-    const user = await User.create({ email, passwordHash, name: signupName });
+
+    const user = await User.create({ email, passwordHash, name: signupName});
 
     const token = jwt.sign(
       { sub: user._id.toString(), email: user.email },

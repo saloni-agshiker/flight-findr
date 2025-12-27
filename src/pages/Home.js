@@ -12,12 +12,15 @@ import { Toaster } from "../ui/sonner";
 import { Tabs, TabsList, TabsTrigger } from "../ui/tabs";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "../ui/dialog";
 import { useNavigate } from "react-router-dom";
+import { useAuth } from "../context/AuthContext";
 
 
 export default function Home() {
    const navigate = useNavigate();
+    const { user, login, logout } = useAuth();
 
-   // Navigaton tab states
+
+   // Navigation tab states
    const [currentPage, setCurrentPage] = useState("browse");
 
    // Filter bar states
@@ -27,10 +30,10 @@ export default function Home() {
 
     async function handleLogout(e) {
         e.preventDefault();
+        logout();
         toast.success(`Successfully logged out!`);
         navigate("/");
     }
-
 
     return (
         <div className="min-h-screen bg-gray-50">
@@ -49,7 +52,7 @@ export default function Home() {
                 </div>
                 <div className="flex items-center gap-2">
                 <div className="hidden md:block text-sm text-muted-foreground mr-2">
-                    Welcome!
+                    Welcome, {user?.name ?? ""}!
                 </div>
                 <Button variant="ghost" size="sm">
                     <Heart className="w-4 h-4 mr-2" />

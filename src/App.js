@@ -5,18 +5,20 @@ import Trips from "./pages/Trips";
 import { Toaster } from "sonner";
 
 import './App.css';
+import { AuthProvider } from "./context/AuthContext";
 
 function App() {
   return (
-    
-    <BrowserRouter>
-      <Toaster richColors position="top-right" />
-      <Routes>
-        <Route path="/" element={<Login />} />
-        <Route path="/home" element={<Home />} />
-        <Route path="/trips" element={<Trips />} />
-      </Routes>
-    </BrowserRouter>
+    <AuthProvider>
+      <BrowserRouter>
+        <Toaster richColors position="top-right" />
+        <Routes>
+          <Route path="/" element={<Login />} />
+          <Route path="/home" element={<Home />} />
+          <Route path="/trips" element={<Trips />} />
+        </Routes>
+      </BrowserRouter>
+    </AuthProvider>
   );
 }
 
