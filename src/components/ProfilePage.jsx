@@ -7,7 +7,7 @@ import { Textarea } from "../ui/textarea";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "../ui/card";
 import { Badge } from "../ui/badge";
 import { toast } from "sonner";
-
+import { useAuth } from "../context/AuthContext";
 
 const availableInterests = [
   "Surfing", "Yoga", "Photography", "Hiking", "Skiing", 
@@ -21,30 +21,51 @@ const availableLanguages = [
   "Japanese", "Korean", "Portuguese", "Arabic", "Hindi"
 ];
 
-export function ProfilePage({ currentUser, onUpdateProfile }) {
-  const [profile, setProfile] = useState<UserProfile>({
-    name: currentUser.name,
-    email: currentUser.email,
-    phone: "",
-    location: "",
-    college: "",
-    bio: "",
-    interests: [],
-    languages: ["English"],
-    profileImage: `https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=400`
-  });
-
+export function ProfilePage() {
   const [isEditing, setIsEditing] = useState(false);
+  const { user } = useAuth();
 
-  const handleSave = () => {
+  const [profile, setProfile] = useState(() => ({
+    name: user?.name ?? "",
+    email: user?.email ?? "",
+    college: user?.college ?? "",
+    residence: user?.residence ?? "",
+    bio: user?.bio ?? "",
+    languages: user?.languages ?? [],
+    profilePic: user?.profilePic ?? "",
+  }));
+
+  async function handleSave(e) {
+    e.preventDefault();
+
     if (!profile.name || !profile.email) {
       toast.error("Name and email are required");
       return;
     }
+    try {
+      const token = localStorage.getItem("token");
+      const res = await fetch("http://localhost:5001/api/users/me", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json", ...(token ? { Authorization: `Bearer ${token}` } : {})},
+        body: JSON.stringify({ 
+          name: profile.name,
+          email: profile.email,
+          college: profile.college,
+          residence: profile.residence,
+          bio: profile.bio,
+          languages: profile.languages,
+          profilePic: profile.profilePic
+        })
+      });
 
-    onUpdateProfile(profile);
-    setIsEditing(false);
-    toast.success("Profile updated successfully!");
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.message || "Update failed");
+
+      toast.success("Profile updated successfully!");
+      setIsEditing(false);
+    } catch (err) {
+      alert(err.message);
+    }
   };
 
   const toggleInterest = (interest) => {
@@ -98,8 +119,7 @@ export function ProfilePage({ currentUser, onUpdateProfile }) {
           <div className="flex items-center gap-6">
             <div className="relative">
               <img 
-                src={profile.profileImage} 
-                alt={profile.name}
+                src={ user?.profilePic || "../logo.svg"} 
                 className="w-24 h-24 rounded-full object-cover border-4 border-white shadow-lg"
               />
               {isEditing && (
@@ -133,7 +153,7 @@ export function ProfilePage({ currentUser, onUpdateProfile }) {
               <Label htmlFor="name">Full Name *</Label>
               <Input
                 id="name"
-                value={profile.name}
+                value={user?.name}
                 onChange={(e) => setProfile({ ...profile, name: e.target.value })}
                 disabled={!isEditing}
                 required
@@ -144,7 +164,7 @@ export function ProfilePage({ currentUser, onUpdateProfile }) {
               <Input
                 id="email"
                 type="email"
-                value={profile.email}
+                value={user?.email}
                 onChange={(e) => setProfile({ ...profile, email: e.target.value })}
                 disabled={!isEditing}
                 required
@@ -154,22 +174,11 @@ export function ProfilePage({ currentUser, onUpdateProfile }) {
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="space-y-2">
-              <Label htmlFor="phone">Phone Number</Label>
-              <Input
-                id="phone"
-                type="tel"
-                placeholder="+1 (555) 123-4567"
-                value={profile.phone}
-                onChange={(e) => setProfile({ ...profile, phone: e.target.value })}
-                disabled={!isEditing}
-              />
-            </div>
-            <div className="space-y-2">
               <Label htmlFor="college">College/University</Label>
               <Input
                 id="college"
                 placeholder="e.g., Stanford University"
-                value={profile.college}
+                value={user?.college}
                 onChange={(e) => setProfile({ ...profile, college: e.target.value })}
                 disabled={!isEditing}
               />
@@ -177,13 +186,13 @@ export function ProfilePage({ currentUser, onUpdateProfile }) {
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="location">Location</Label>
+            <Label htmlFor="location">Residence</Label>
             <div className="relative">
               <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
               <Input
                 id="location"
                 placeholder="e.g., San Francisco, CA"
-                value={profile.location}
+                value={user?.location}
                 onChange={(e) => setProfile({ ...profile, location: e.target.value })}
                 disabled={!isEditing}
                 className="pl-10"
@@ -196,39 +205,11 @@ export function ProfilePage({ currentUser, onUpdateProfile }) {
             <Textarea
               id="bio"
               placeholder="Tell others about yourself, your travel style, and what you're looking for in a travel buddy..."
-              value={profile.bio}
+              value={user?.bio}
               onChange={(e) => setProfile({ ...profile, bio: e.target.value })}
               disabled={!isEditing}
               rows={4}
             />
-          </div>
-        </CardContent>
-      </Card>
-
-      {/* Interests */}
-      <Card className="mb-6">
-        <CardHeader>
-          <CardTitle>Interests</CardTitle>
-          <CardDescription>Select your travel interests and activities</CardDescription>
-        </CardHeader>
-        <CardContent>
-          <div className="flex flex-wrap gap-2">
-            {availableInterests.map((interest) => (
-              <Badge
-                key={interest}
-                variant={profile.interests.includes(interest) ? "default" : "outline"}
-                className={`cursor-pointer transition-colors ${
-                  isEditing ? "hover:bg-teal-100" : "cursor-default"
-                } ${
-                  profile.interests.includes(interest) 
-                    ? "bg-teal-500 hover:bg-teal-600 text-white" 
-                    : ""
-                }`}
-                onClick={() => isEditing && toggleInterest(interest)}
-              >
-                {interest}
-              </Badge>
-            ))}
           </div>
         </CardContent>
       </Card>
@@ -244,7 +225,7 @@ export function ProfilePage({ currentUser, onUpdateProfile }) {
             {availableLanguages.map((language) => (
               <Badge
                 key={language}
-                variant={profile.languages.includes(language) ? "default" : "outline"}
+                variant={user?.languages.includes(language) ? "default" : "outline"}
                 className={`cursor-pointer transition-colors ${
                   isEditing ? "hover:bg-cyan-100" : "cursor-default"
                 } ${

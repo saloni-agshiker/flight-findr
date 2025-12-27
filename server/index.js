@@ -7,6 +7,7 @@ const mongoose = require("mongoose");
 
 // import routes
 const authRoutes = require("./routes/auth");
+const profileRoutes = require("./routes/users")
 
 // creates Express app server instance
 const app = express();
@@ -15,13 +16,9 @@ const app = express();
 app.use(cors({ origin: "http://localhost:3000", credentials: true }));
 app.use(express.json());
 
-// health check - remove
-app.get("/health", (req, res) => {
-  res.send("OK");
-});
-
 // registers routes
 app.use("/api/auth", authRoutes);
+app.use("/api/users", profileRoutes);
 
 // connects to mongodb
 mongoose

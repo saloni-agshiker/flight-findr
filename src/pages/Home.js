@@ -16,9 +16,8 @@ import { useAuth } from "../context/AuthContext";
 
 
 export default function Home() {
-   const navigate = useNavigate();
+    const navigate = useNavigate();
     const { user, login, logout } = useAuth();
-
 
    // Navigation tab states
    const [currentPage, setCurrentPage] = useState("browse");
@@ -27,6 +26,9 @@ export default function Home() {
    const [searchQuery, setSearchQuery] = useState("");
    const [selectedDestination, setSelectedDestination] = useState("");
    const [selectedStyle, setSelectedStyle] = useState("");
+
+   // Profile page states
+   const [profileDialogOpen, setProfileDialogOpen] = useState(false);
 
     async function handleLogout(e) {
         e.preventDefault();
@@ -60,7 +62,8 @@ export default function Home() {
                 </Button>
                 <Button 
                     variant="outline" 
-                    size="sm" 
+                    size="sm"
+                    onClick={() => setProfileDialogOpen(true)}
                     className="bg-teal-50 border-teal-200 hover:bg-teal-100"
                 >
                     <User className="w-4 h-4 mr-2" />
@@ -125,6 +128,17 @@ export default function Home() {
         {currentPage === "chat" && (
         <ChatPage />
         )}
+
+        <Dialog open={profileDialogOpen} onOpenChange={setProfileDialogOpen}>
+            <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+            <DialogHeader>
+                <DialogTitle>My Profile</DialogTitle>
+            </DialogHeader>
+            {currentUser && (
+                <ProfilePage/>
+            )}
+            </DialogContent>
+        </Dialog>
 
             
       </div>
