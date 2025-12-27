@@ -11,9 +11,27 @@ import { toast } from "sonner";
 import { Toaster } from "../ui/sonner";
 import { Tabs, TabsList, TabsTrigger } from "../ui/tabs";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "../ui/dialog";
+import { useNavigate } from "react-router-dom";
+
 
 export default function Home() {
-   
+   const navigate = useNavigate();
+
+   // Navigaton tab states
+   const [currentPage, setCurrentPage] = useState("browse");
+
+   // Filter bar states
+   const [searchQuery, setSearchQuery] = useState("");
+   const [selectedDestination, setSelectedDestination] = useState("");
+   const [selectedStyle, setSelectedStyle] = useState("");
+
+    async function handleLogout(e) {
+        e.preventDefault();
+        toast.success(`Successfully logged out!`);
+        navigate("/");
+    }
+
+
     return (
         <div className="min-h-screen bg-gray-50">
             {/* Header */}
@@ -31,7 +49,7 @@ export default function Home() {
                 </div>
                 <div className="flex items-center gap-2">
                 <div className="hidden md:block text-sm text-muted-foreground mr-2">
-                    Welcome, {currentUser?.name}!
+                    Welcome!
                 </div>
                 <Button variant="ghost" size="sm">
                     <Heart className="w-4 h-4 mr-2" />
@@ -40,7 +58,6 @@ export default function Home() {
                 <Button 
                     variant="outline" 
                     size="sm" 
-                    onClick={() => setProfileDialogOpen(true)}
                     className="bg-teal-50 border-teal-200 hover:bg-teal-100"
                 >
                     <User className="w-4 h-4 mr-2" />
@@ -53,7 +70,7 @@ export default function Home() {
                 </div>
             </div>
             </div>
-        </header>
+            </header>
 
         {/* Hero Section */}
         <section className="bg-gradient-to-br from-teal-500 via-cyan-600 to-blue-600 text-white py-12">
@@ -67,7 +84,7 @@ export default function Home() {
 
             {/* Navigation Tabs */}
             <div className="flex justify-center">
-                <Tabs value={currentPage} onValueChange={(value) => setCurrentPage((value) => setCurrentPage(value))} className="w-full max-w-md">
+                <Tabs value={currentPage} onValueChange={setCurrentPage} className="w-full max-w-md">
                 <TabsList className="grid w-full grid-cols-3">
                     <TabsTrigger value="browse" className="data-[state=active]:bg-white data-[state=active]:text-teal-600">
                     <Users className="w-4 h-4 mr-2" />
@@ -87,10 +104,7 @@ export default function Home() {
             </div>
         </section>
 
-        {/* Main Content */}
         {currentPage === "browse" && (
-            <>
-            {/* Filter Bar */}
             <FilterBar
                 searchQuery={searchQuery}
                 onSearchChange={setSearchQuery}
@@ -99,96 +113,17 @@ export default function Home() {
                 selectedStyle={selectedStyle}
                 onStyleChange={setSelectedStyle}
             />
-
-            {/* Results Section */}
-            <section className="container mx-auto px-4 py-8">
-                <div className="flex items-center justify-between mb-6">
-                <div>
-                    <h3 className="text-2xl mb-1">
-                    {filteredTravelers.length === mockTravelers.length 
-                        ? "All Travel Buddies" 
-                        : "Search Results"}
-                    </h3>
-                    <p className="text-muted-foreground">
-                    {filteredTravelers.length} {filteredTravelers.length === 1 ? 'traveler' : 'travelers'} found
-                    </p>
-                </div>
-                </div>
-
-                {filteredTravelers.length === 0 ? (
-                <div className="text-center py-16">
-                    <Users className="w-16 h-16 text-muted-foreground mx-auto mb-4" />
-                    <h3 className="text-xl mb-2">No travelers found</h3>
-                    <p className="text-muted-foreground mb-4">
-                    Try adjusting your filters or search query
-                    </p>
-                    <Button 
-                    variant="outline"
-                    onClick={() => {
-                        setSearchQuery("");
-                        setSelectedDestination("All Destinations");
-                        setSelectedStyle("All Styles");
-                    }}
-                    >
-                    Clear All Filters
-                    </Button>
-                </div>
-                ) : (
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-                    {filteredTravelers.map((traveler) => (
-                    <TravelerCard
-                        key={traveler.id}
-                        traveler={traveler}
-                        onConnect={handleConnect}
-                        onViewProfile={handleViewProfile}
-                    />
-                    ))}
-                </div>
-                )}
-            </section>
-
-            {/* Profile Dialog */}
-            <ProfileDialog
-                traveler={selectedTraveler}
-                open={dialogOpen}
-                onOpenChange={setDialogOpen}
-                onConnect={handleConnect}
-            />
-            </>
         )}
 
         {currentPage === "trips" && (
-            <TripsPage />
+        <TripsPage />
         )}
 
         {currentPage === "chat" && (
-            <ChatPage />
+        <ChatPage />
         )}
 
-        {currentPage === "profile" && currentUser && (
-            <ProfilePage 
-            currentUser={currentUser} 
-            onUpdateProfile={handleUpdateProfile}
-            />
-        )}
-
-        {/* Profile Dialog */}
-        <Dialog open={profileDialogOpen} onOpenChange={setProfileDialogOpen}>
-            <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
-            <DialogHeader>
-                <DialogTitle>My Profile</DialogTitle>
-            </DialogHeader>
-            {currentUser && (
-                <ProfilePage 
-                currentUser={currentUser} 
-                onUpdateProfile={(profile) => {
-                    handleUpdateProfile(profile);
-                    setProfileDialogOpen(false);
-                }}
-                />
-            )}
-            </DialogContent>
-        </Dialog>
+            
       </div>
     );
 }
