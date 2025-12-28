@@ -30,6 +30,7 @@ export function ProfilePage() {
     email: user?.email ?? "",
     college: user?.college ?? "",
     residence: user?.residence ?? "",
+    year: user?.year ?? "",
     bio: user?.bio ?? "",
     languages: user?.languages ?? [],
     profilePic: user?.profilePic ?? "",
@@ -52,6 +53,7 @@ export function ProfilePage() {
           email: profile.email,
           college: profile.college,
           residence: profile.residence,
+          year: profile.year,
           bio: profile.bio,
           languages: profile.languages,
           profilePic: profile.profilePic
@@ -68,6 +70,7 @@ export function ProfilePage() {
     }
   };
 
+  /*
   const toggleInterest = (interest) => {
     setProfile(prev => ({
       ...prev,
@@ -85,6 +88,7 @@ export function ProfilePage() {
         : [...prev.languages, language]
     }));
   };
+  */
 
   return (
     <div className="container mx-auto px-4 py-8 max-w-4xl">
@@ -201,6 +205,20 @@ export function ProfilePage() {
           </div>
 
           <div className="space-y-2">
+            <Label htmlFor="year">Year</Label>
+            <div className="relative">
+              <Input
+                id="year"
+                placeholder="e.g., Freshman"
+                value={user?.year}
+                onChange={(e) => setProfile({ ...profile, year: e.target.value })}
+                disabled={!isEditing}
+                className="pl-10"
+              />
+            </div>
+          </div>
+
+          <div className="space-y-2">
             <Label htmlFor="bio">Bio</Label>
             <Textarea
               id="bio"
@@ -215,6 +233,7 @@ export function ProfilePage() {
       </Card>
 
       {/* Languages */}
+      {/*
       <Card>
         <CardHeader>
           <CardTitle>Languages</CardTitle>
@@ -242,6 +261,7 @@ export function ProfilePage() {
           </div>
         </CardContent>
       </Card>
+      */}
     </div>
   );
 }

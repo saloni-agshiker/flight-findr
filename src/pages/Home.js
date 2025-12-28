@@ -134,9 +134,7 @@ export default function Home() {
             <DialogHeader>
                 <DialogTitle>My Profile</DialogTitle>
             </DialogHeader>
-            {currentUser && (
-                <ProfilePage/>
-            )}
+            <ProfilePage/>
             </DialogContent>
         </Dialog>
 
