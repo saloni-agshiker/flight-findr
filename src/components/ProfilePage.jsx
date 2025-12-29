@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { User, Mail, MapPin, Globe, Camera, Save } from "lucide-react";
 import { Button } from "../ui/button";
 import { Input } from "../ui/input";
@@ -17,13 +17,33 @@ const availableInterests = [
 ];
 
 const availableLanguages = [
-  "English", "Spanish", "French", "German", "Mandarin",
-  "Japanese", "Korean", "Portuguese", "Arabic", "Hindi"
+  "English",
+  "Spanish",
+  "French",
+  "German",
+  "Mandarin",
+  "Hindi",
+  "Arabic",
+  "Portuguese",
+  "Russian",
+  "Japanese",
+  "Other"
 ];
+
+// Frontend ↔ Backend enum mapping
+export const YEAR_OPTIONS = [
+  { label: "Freshman", value: "Freshman" },
+  { label: "Sophomore", value: "Sophomore" },
+  { label: "Junior", value: "Junior" },
+  { label: "Senior", value: "Senior" },
+  { label: "Masters", value: "Masters" },
+  { label: "PhD", value: "PhD" },
+];
+
 
 export function ProfilePage() {
   const [isEditing, setIsEditing] = useState(false);
-  const { user } = useAuth();
+  const { user, updateUser } = useAuth();
 
   const [profile, setProfile] = useState(() => ({
     name: user?.name ?? "",
@@ -36,6 +56,19 @@ export function ProfilePage() {
     profilePic: user?.profilePic ?? "",
   }));
 
+  useEffect(() => {
+    if (!user) return;
+    setProfile({
+      name: user?.name ?? "",
+      email: user?.email ?? "",
+      college: user?.college ?? "",
+      residence: user?.residence ?? "",
+      year: user?.year ?? "",
+      bio: user?.bio ?? "",
+      languages: user?.languages ?? []
+    });
+  }, [user]);
+
   async function handleSave(e) {
     e.preventDefault();
 
@@ -45,24 +78,43 @@ export function ProfilePage() {
     }
     try {
       const token = localStorage.getItem("token");
+
+      const temp = {};
+      if (profile.year) temp.year = profile.year;
+      if (profile.bio !== undefined) temp.bio = profile.bio;
       const res = await fetch("http://localhost:5001/api/users/me", {
         method: "PATCH",
-        headers: { "Content-Type": "application/json", ...(token ? { Authorization: `Bearer ${token}` } : {})},
+        headers: {
+          "Content-Type": "application/json", 
+          "Authorization": `Bearer ${token}`
+        },
         body: JSON.stringify({ 
           name: profile.name,
-          email: profile.email,
           college: profile.college,
           residence: profile.residence,
-          year: profile.year,
-          bio: profile.bio,
-          languages: profile.languages,
-          profilePic: profile.profilePic
+          year: temp.year,
+          bio: temp.bio,
+          //languages: profile.languages,
+          //profilePic: profile.profilePic
         })
       });
 
       const data = await res.json();
       if (!res.ok) throw new Error(data.message || "Update failed");
 
+      setProfile({
+        name: data.user.name ?? "",
+        email: data.user.email ?? "",
+        college: data.user.college ?? "",
+        residence: data.user.residence ?? "",
+        year: data.user.year ?? "",
+        bio: data.user.bio ?? "",
+        languages: data.user.languages ?? [],
+        profilePic: data.user.profilePic ?? "",
+      });
+
+
+      updateUser(data.user);
       toast.success("Profile updated successfully!");
       setIsEditing(false);
     } catch (err) {
@@ -79,7 +131,7 @@ export function ProfilePage() {
         : [...prev.interests, interest]
     }));
   };
-
+  */
   const toggleLanguage = (language) => {
     setProfile(prev => ({
       ...prev,
@@ -88,7 +140,7 @@ export function ProfilePage() {
         : [...prev.languages, language]
     }));
   };
-  */
+  
 
   return (
     <div className="container mx-auto px-4 py-8 max-w-4xl">
@@ -157,7 +209,7 @@ export function ProfilePage() {
               <Label htmlFor="name">Full Name *</Label>
               <Input
                 id="name"
-                value={user?.name}
+                value={profile.name}
                 onChange={(e) => setProfile({ ...profile, name: e.target.value })}
                 disabled={!isEditing}
                 required
@@ -168,9 +220,8 @@ export function ProfilePage() {
               <Input
                 id="email"
                 type="email"
-                value={user?.email}
-                onChange={(e) => setProfile({ ...profile, email: e.target.value })}
-                disabled={!isEditing}
+                value={profile.email}
+                disabled={true}
                 required
               />
             </div>
@@ -178,11 +229,11 @@ export function ProfilePage() {
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="space-y-2">
-              <Label htmlFor="college">College/University</Label>
+              <Label htmlFor="college">College</Label>
               <Input
                 id="college"
-                placeholder="e.g., Stanford University"
-                value={user?.college}
+                placeholder="e.g., Georgia Tech"
+                value={profile.college}
                 onChange={(e) => setProfile({ ...profile, college: e.target.value })}
                 disabled={!isEditing}
               />
@@ -194,10 +245,10 @@ export function ProfilePage() {
             <div className="relative">
               <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
               <Input
-                id="location"
-                placeholder="e.g., San Francisco, CA"
-                value={user?.location}
-                onChange={(e) => setProfile({ ...profile, location: e.target.value })}
+                id="residence"
+                placeholder="e.g., North Ave Apartments"
+                value={profile.residence}
+                onChange={(e) => setProfile({ ...profile, residence: e.target.value })}
                 disabled={!isEditing}
                 className="pl-10"
               />
@@ -207,14 +258,22 @@ export function ProfilePage() {
           <div className="space-y-2">
             <Label htmlFor="year">Year</Label>
             <div className="relative">
-              <Input
+              <select
                 id="year"
-                placeholder="e.g., Freshman"
-                value={user?.year}
+                value={profile.year}
                 onChange={(e) => setProfile({ ...profile, year: e.target.value })}
                 disabled={!isEditing}
-                className="pl-10"
-              />
+                className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm
+                          focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2
+                          disabled:cursor-not-allowed disabled:opacity-50"
+              >
+                <option value="">Select year</option>
+                {YEAR_OPTIONS.map((option) => (
+                  <option key={option.value} value={option.value}>
+                    {option.label}
+                  </option>
+                ))}
+              </select>
             </div>
           </div>
 
@@ -222,8 +281,8 @@ export function ProfilePage() {
             <Label htmlFor="bio">Bio</Label>
             <Textarea
               id="bio"
-              placeholder="Tell others about yourself, your travel style, and what you're looking for in a travel buddy..."
-              value={user?.bio}
+              placeholder="Tell others about yourself (major, hobbies)..."
+              value={profile.bio}
               onChange={(e) => setProfile({ ...profile, bio: e.target.value })}
               disabled={!isEditing}
               rows={4}
@@ -233,7 +292,7 @@ export function ProfilePage() {
       </Card>
 
       {/* Languages */}
-      {/*
+      
       <Card>
         <CardHeader>
           <CardTitle>Languages</CardTitle>
@@ -244,7 +303,7 @@ export function ProfilePage() {
             {availableLanguages.map((language) => (
               <Badge
                 key={language}
-                variant={user?.languages.includes(language) ? "default" : "outline"}
+                variant={profile.languages.includes(language) ? "default" : "outline"}
                 className={`cursor-pointer transition-colors ${
                   isEditing ? "hover:bg-cyan-100" : "cursor-default"
                 } ${
@@ -261,7 +320,7 @@ export function ProfilePage() {
           </div>
         </CardContent>
       </Card>
-      */}
+      
     </div>
   );
 }

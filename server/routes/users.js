@@ -27,14 +27,12 @@ router.patch("/me", requireAuth, async (req, res) => {
     try {
         const allowedFields = [
         "name",
-        "firstName",
-        "lastName",
         "college",
         "residence",
-        "bio",
-        "languages",
-        "profilePic",
         "year",
+        "bio",
+        //"languages",
+        //"profilePic",
         ];
 
         const updates = {};
@@ -54,7 +52,7 @@ router.patch("/me", requireAuth, async (req, res) => {
         }
         return res.json({ user });
     } catch (err) {
-        return res.status(500).json({ message: "Server error" });
+        return res.status(500).json({ message: "Server error 1", detail: err.message });
     }
 }
 
