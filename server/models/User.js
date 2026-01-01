@@ -1,4 +1,5 @@
 const mongoose = require("mongoose");
+
 const LANGUAGES = [
   "English",
   "Spanish",
@@ -11,6 +12,26 @@ const LANGUAGES = [
   "Russian",
   "Japanese",
   "Other"
+];
+
+const INTERESTS = [
+  "Surfing",
+  "Yoga", 
+  "Photography",
+  "Hiking",
+  "Skiing", 
+  "Food & Dining",
+  "Museums",
+  "Nightlife",
+  "Shopping",
+  "Beach",
+  "Adventure Sports",
+  "Wildlife",
+  "History",
+  "Art",
+  "Music",
+  "Camping",
+  "Swimming"
 ];
 
 const userSchema = new mongoose.Schema(

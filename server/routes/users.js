@@ -31,7 +31,7 @@ router.patch("/me", requireAuth, async (req, res) => {
         "residence",
         "year",
         "bio",
-        //"languages",
+        "languages",
         //"profilePic",
         ];
 
@@ -52,7 +52,7 @@ router.patch("/me", requireAuth, async (req, res) => {
         }
         return res.json({ user });
     } catch (err) {
-        return res.status(500).json({ message: "Server error 1", detail: err.message });
+        return res.status(500).json({ message: "Server error", detail: err.message });
     }
 }
 

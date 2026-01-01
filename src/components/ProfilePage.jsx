@@ -9,13 +9,6 @@ import { Badge } from "../ui/badge";
 import { toast } from "sonner";
 import { useAuth } from "../context/AuthContext";
 
-const availableInterests = [
-  "Surfing", "Yoga", "Photography", "Hiking", "Skiing", 
-  "Food & Dining", "Museums", "Nightlife", "Shopping",
-  "Beach", "Adventure Sports", "Wildlife", "History",
-  "Art", "Music", "Camping", "Diving"
-];
-
 const availableLanguages = [
   "English",
   "Spanish",
@@ -31,7 +24,7 @@ const availableLanguages = [
 ];
 
 // Frontend ↔ Backend enum mapping
-export const YEAR_OPTIONS = [
+const YEAR_OPTIONS = [
   { label: "Freshman", value: "Freshman" },
   { label: "Sophomore", value: "Sophomore" },
   { label: "Junior", value: "Junior" },
@@ -40,6 +33,8 @@ export const YEAR_OPTIONS = [
   { label: "PhD", value: "PhD" },
 ];
 
+const normalizeArr = (array) =>
+  Array.isArray(array) ? array : [];
 
 export function ProfilePage() {
   const [isEditing, setIsEditing] = useState(false);
@@ -52,7 +47,7 @@ export function ProfilePage() {
     residence: user?.residence ?? "",
     year: user?.year ?? "",
     bio: user?.bio ?? "",
-    languages: user?.languages ?? [],
+    languages: normalizeArr(user?.languages),
     profilePic: user?.profilePic ?? "",
   }));
 
@@ -65,7 +60,7 @@ export function ProfilePage() {
       residence: user?.residence ?? "",
       year: user?.year ?? "",
       bio: user?.bio ?? "",
-      languages: user?.languages ?? []
+      languages: normalizeArr(user?.languages),
     });
   }, [user]);
 
@@ -94,7 +89,7 @@ export function ProfilePage() {
           residence: profile.residence,
           year: temp.year,
           bio: temp.bio,
-          //languages: profile.languages,
+          languages: profile.languages,
           //profilePic: profile.profilePic
         })
       });
@@ -109,10 +104,9 @@ export function ProfilePage() {
         residence: data.user.residence ?? "",
         year: data.user.year ?? "",
         bio: data.user.bio ?? "",
-        languages: data.user.languages ?? [],
+        languages: data.user.languages,
         profilePic: data.user.profilePic ?? "",
       });
-
 
       updateUser(data.user);
       toast.success("Profile updated successfully!");
@@ -122,7 +116,7 @@ export function ProfilePage() {
     }
   };
 
-  /*
+  
   const toggleInterest = (interest) => {
     setProfile(prev => ({
       ...prev,
@@ -131,7 +125,7 @@ export function ProfilePage() {
         : [...prev.interests, interest]
     }));
   };
-  */
+  
   const toggleLanguage = (language) => {
     setProfile(prev => ({
       ...prev,
@@ -263,10 +257,8 @@ export function ProfilePage() {
                 value={profile.year}
                 onChange={(e) => setProfile({ ...profile, year: e.target.value })}
                 disabled={!isEditing}
-                className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm
-                          focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2
-                          disabled:cursor-not-allowed disabled:opacity-50"
-              >
+                className="file:text-foreground placeholder:text-muted-foreground selection:bg-primary selection:text-primary-foreground dark:bg-input/30 border-input flex h-9 w-full min-w-0 rounded-md border px-3 py-1 text-base bg-input-background transition-[color,box-shadow] outline-none file:inline-flex file:h-7 file:border-0 file:bg-transparent file:text-sm file:font-medium disabled:pointer-events-none disabled:cursor-not-allowed disabled:opacity-50 md:text-sm focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px] 
+                aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 aria-invalid:border-destructive">
                 <option value="">Select year</option>
                 {YEAR_OPTIONS.map((option) => (
                   <option key={option.value} value={option.value}>
@@ -292,7 +284,6 @@ export function ProfilePage() {
       </Card>
 
       {/* Languages */}
-      
       <Card>
         <CardHeader>
           <CardTitle>Languages</CardTitle>
