@@ -28,6 +28,28 @@ export function TripsPage() {
   const [trips, setTrips] = useState(null);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editingTrip, setEditingTrip] = useState(null);
+  const { user, updateUser } = useAuth();
+
+  useEffect(() => {
+    async function fetchTrips() {
+      try {
+        const res = await fetch(`http://localhost:5001/api/trips?userId=${user._id}`, {
+        method: "GET",
+        headers: {
+          "Content-Type": "application/json", 
+        },
+        });
+
+        if (!res.ok) throw new Error("Failed to fetch trips");
+        const data = await res.json();
+        setTrips(data);
+      } catch (err) {
+        alert(err.message);
+        setTrips([]);
+      }
+    }
+    fetchTrips();
+  }, []);
 
   const [newTripData, setNewTripData] = useState(() => ({
     airline: "",
@@ -43,11 +65,26 @@ export function TripsPage() {
     addNotes: ""
   }));
 
-  const { user, updateUser } = useAuth();
+  const getTransportIcon = (mode) => {
+    switch (mode) {
+      case "car": return <Car className="w-4 h-4" />;
+      case "bus": return <Bus className="w-4 h-4" />;
+      case "rideshare": return <Users className="w-4 h-4" />;
+      default: return <Car className="w-4 h-4" />;
+    }
+  };
 
-  async function addTrip(e) {
+  async function handleAddTrip(e) {
     e.preventDefault();
 
+  }
+
+  async function handleEditTrip(e) {
+    e.preventDefault();
+  }
+
+  async function handleDeleteTrip(e) {
+    e.preventDefault();
   }
 
   return (
@@ -59,7 +96,7 @@ export function TripsPage() {
         </div>
         <Dialog open={dialogOpen} onOpenChange={(open) => {
           setDialogOpen(open);
-          if (!open) resetForm();
+          {/* if (!open) resetForm(); FIX LATER */}
         }}>
           <DialogTrigger asChild>
             <Button>
@@ -271,7 +308,7 @@ export function TripsPage() {
             <div className="flex justify-end gap-2">
               <Button variant="outline" onClick={() => {
                 setDialogOpen(false);
-                resetForm();
+                {/* resetForm(); FIX LATER */}
               }}>
                 Cancel
               </Button>
