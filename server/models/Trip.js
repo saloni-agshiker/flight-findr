@@ -7,9 +7,9 @@ const tripSchema = new mongoose.Schema(
         flightNum: { type: String, required: true, default: "" },
         depAirport: { type: String, required: true, default: "", index: true },
         arrAirport: { type: String, required: true, default: "", index: true },
-        //depAt: { type: Date, required: true, index: true },
-        //arrAt: { type: Date, required: true, index: true },
-        //timeDepToAirport: { type: Number, required: true },
+        depAt: { type: Date, required: true, index: true },
+        arrAt: { type: Date, required: true, index: true },
+        timeDepToAirport: { type: Number, required: true },
         transportMode: { 
             type: String,
             enum: ["Personal car", "Rideshare", "Public transit", "Other"],

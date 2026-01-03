@@ -39,16 +39,16 @@ router.get("/trips", async (req, res) => {
 });
 
 // CREATES a trip associated with the user_id
-router.post("/trips", async (req, res) => {
+router.post("/trips", requireAuth, async (req, res) => {
     try {
-        const { airline, flightNum, depAirport, arrAirport, transportMode, addNotes } = req.body;
-        if (!airline || !flightNum || !depAirport || !arrAirport || transportMode == null) return res.status(400).json({ message: "Required info is missing."});
+        const { airline, flightNum, depAirport, arrAirport, depAt, arrAt, timeDepToAirport, transportMode, addNotes } = req.body;
+        if (!airline || !flightNum || !depAirport || !arrAirport || !timeDepToAirport || !depAt || !arrAt || transportMode == null) return res.status(400).json({ message: "Required info is missing."});
         
         console.log(req.userId);
         const user = await User.find({ userId: req.userId });
         if (!user) return res.status(401).json({ message: "User not found" });
 
-        const trip = Trip.create({ userId: req.userId, airline, flightNum, depAirport, arrAirport, transportMode, addNotes });
+        const trip = Trip.create({ userId: req.userId, airline, flightNum, depAirport, arrAirport, depAt, arrAt, timeDepToAirport, transportMode, addNotes });
         return res.status(201).json({
            trip
         });

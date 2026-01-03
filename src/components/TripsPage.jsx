@@ -22,6 +22,17 @@ const TRANSPORT_OPTIONS = [
   { label: "Other", value: "Other" },
 ];
 
+// Helper function to convert time (from front-end React) to minutes
+function timeToMinutes(timeStr) {
+  const [hours, minutes] = timeStr.split(":").map(Number);
+  return hours * 60 + minutes;
+}
+
+// Helper function to combine date and time (from front-end React) to a UTC format used by MongoDB
+function combineDateAndTime(dateStr, timeStr) {
+  return new Date(`${dateStr}T${timeStr}:00`);
+}
+
 export function TripsPage() {
   const [trips, setTrips] = useState(null);
   const [dialogOpen, setDialogOpen] = useState(false);
@@ -81,12 +92,14 @@ export function TripsPage() {
           "Authorization": `Bearer ${token}`
         },
         body: JSON.stringify({
-          userId: user._id,
           airline: newTripData.airline,
           flightNum: newTripData.flightNum,
           depAirport: newTripData.depAirport,
           arrAirport: newTripData.arrAirport,
           transportMode: newTripData.transportMode,
+          depAt: combineDateAndTime(newTripData.depDate, newTripData.depTime),
+          arrAt: combineDateAndTime(newTripData.arrDate, newTripData.arrTime),
+          timeDepToAirport: (timeToMinutes(newTripData.depAirport) - timeToMinutes(newTripData.timeDepToAirport)),
           addNotes: newTripData.addNotes
         })
         });
