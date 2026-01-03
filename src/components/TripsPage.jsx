@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Plus, Plane, Calendar, Clock, MapPin, Users, Car, Bus, Edit, Trash2 } from "lucide-react";
 import { Button } from "../ui/button";
 import { Input } from "../ui/input";
@@ -9,8 +9,6 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from ".
 import { Badge } from "../ui/badge";
 import { toast } from "sonner";
 import { useAuth } from "../context/AuthContext";
-
-const transportModes = ["Personal car", "Rideshare", "Public transit", "Other"];
 
 const normalizeArr = (array) =>
   Array.isArray(array) ? array : [];
@@ -33,13 +31,12 @@ export function TripsPage() {
   useEffect(() => {
     async function fetchTrips() {
       try {
-        const res = await fetch(`http://localhost:5001/api/trips?userId=${user._id}`, {
+        const res = await fetch(`http://localhost:5001/api/trips/trips?userId=${user._id}`, {
         method: "GET",
         headers: {
           "Content-Type": "application/json", 
         },
         });
-
         if (!res.ok) throw new Error("Failed to fetch trips");
         const data = await res.json();
         setTrips(data);
@@ -74,9 +71,31 @@ export function TripsPage() {
     }
   };
 
-  async function handleAddTrip(e) {
-    e.preventDefault();
-
+  async function handleAddTrip() {
+    const token = localStorage.getItem("token");
+    try {
+        const res = await fetch(`http://localhost:5001/api/trips/trips`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${token}`
+        },
+        body: JSON.stringify({
+          userId: user._id,
+          airline: newTripData.airline,
+          flightNum: newTripData.flightNum,
+          depAirport: newTripData.depAirport,
+          arrAirport: newTripData.arrAirport,
+          transportMode: newTripData.transportMode,
+          addNotes: newTripData.addNotes
+        })
+        });
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.message || "Cannot add trip");
+        toast.success("Trip added successfully!");
+      } catch (err) {
+        alert(err.message);
+      }
   }
 
   async function handleEditTrip(e) {
@@ -125,15 +144,17 @@ export function TripsPage() {
                       placeholder="e.g., United Airlines"
                       value={newTripData.airline}
                       onChange={(e) => setNewTripData({ ...newTripData, airline: e.target.value })}
+                      required
                     />
                   </div>
                   <div className="space-y-2">
-                    <Label htmlFor="flightNumber">Flight Number</Label>
+                    <Label htmlFor="flightNumber">Flight Number *</Label>
                     <Input
                       id="flightNumber"
                       placeholder="e.g., UA1234"
                       value={newTripData.flightNum}
                       onChange={(e) => setNewTripData({ ...newTripData, flightNum: e.target.value })}
+                      required
                     />
                   </div>
                 </div>
@@ -146,6 +167,7 @@ export function TripsPage() {
                       placeholder="e.g., ATL"
                       value={newTripData.depAirport}
                       onChange={(e) => setNewTripData({ ...newTripData, depAirport: e.target.value })}
+                      required
                     />
                   </div>
                   <div className="space-y-2">
@@ -155,6 +177,7 @@ export function TripsPage() {
                       placeholder="e.g., EWR"
                       value={newTripData.arrAirport}
                       onChange={(e) => setNewTripData({ ...newTripData, arrAirport: e.target.value })}
+                      required
                     />
                   </div>
                 </div>
@@ -176,27 +199,30 @@ export function TripsPage() {
                       type="time"
                       value={newTripData.depTime}
                       onChange={(e) => setNewTripData({ ...newTripData, depTime: e.target.value })}
+                      required
                     />
                   </div>
                 </div>
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div className="space-y-2">
-                    <Label htmlFor="arrivalDate">Arrival Date</Label>
+                    <Label htmlFor="arrivalDate">Arrival Date *</Label>
                     <Input
                       id="arrivalDate"
                       type="date"
                       value={newTripData.arrDate}
                       onChange={(e) => setNewTripData({ ...newTripData, arrDate: e.target.value })}
+                      required
                     />
                   </div>
                   <div className="space-y-2">
-                    <Label htmlFor="arrivalTime">Arrival Time</Label>
+                    <Label htmlFor="arrivalTime">Arrival Time *</Label>
                     <Input
                       id="arrivalTime"
                       type="time"
                       value={newTripData.arrTime}
                       onChange={(e) => setNewTripData({ ...newTripData, arrTime: e.target.value })}
+                      required
                     />
                   </div>
                 </div>
@@ -208,27 +234,31 @@ export function TripsPage() {
                 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div className="space-y-2">
-                    <Label htmlFor="leaveCollegeTime">Time Leaving College</Label>
+                    <Label htmlFor="leaveCollegeTime">Time Leaving College *</Label>
                     <Input
                       id="leaveCollegeTime"
                       type="time"
                       value={newTripData.timeDepToAirport}
                       onChange={(e) => setNewTripData({ ...newTripData, timeDepToAirport: e.target.value })}
+                      required
                     />
                   </div>
                   <div className="space-y-2">
-                    <Label htmlFor="transportMode">Mode of Transportation</Label>
-                    <Select 
-                      value={newTripData.transportMode} 
-                      onValueChange={(value) => setNewTripData({ ...newTripData, transportMode: value })}
-                    >
-                    <option value="">Select mode</option>
-                    {TRANSPORT_OPTIONS.map((option) => (
-                      <option key={option.value} value={option.value}>
-                        {option.label}
-                      </option>
-                    ))}
-                    </Select>
+                    <Label htmlFor="transportMode">Mode of Transportation *</Label>
+                    <select
+                      id="mode"
+                      value={newTripData.transportMode}
+                      onChange={(e) => setNewTripData({ ...newTripData, transportMode: e.target.value })}
+                      required
+                      className="file:text-foreground placeholder:text-muted-foreground selection:bg-primary selection:text-primary-foreground dark:bg-input/30 border-input flex h-9 w-full min-w-0 rounded-md border px-3 py-1 text-base bg-input-background transition-[color,box-shadow] outline-none file:inline-flex file:h-7 file:border-0 file:bg-transparent file:text-sm file:font-medium disabled:pointer-events-none disabled:cursor-not-allowed disabled:opacity-50 md:text-sm focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px] 
+                      aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 aria-invalid:border-destructive">
+                      <option value="">Select mode</option>
+                      {TRANSPORT_OPTIONS.map((option) => (
+                        <option key={option.value} value={option.value}>
+                          {option.label}
+                        </option>
+                      ))}
+                  </select>
                   </div>
                 </div>
               </div>
@@ -319,122 +349,6 @@ export function TripsPage() {
           </DialogContent>
         </Dialog>
       </div>
-
-      {/* Trips List */}
-      {trips.length === 0 ? (
-        <Card>
-          <CardContent className="flex flex-col items-center justify-center py-16">
-            <Plane className="w-16 h-16 text-muted-foreground mb-4" />
-            <h3 className="text-xl mb-2">No trips yet</h3>
-            <p className="text-muted-foreground mb-4">Add your first trip to start finding travel buddies</p>
-            <Button onClick={() => setDialogOpen(true)}>
-              <Plus className="w-4 h-4 mr-2" />
-              Add Your First Trip
-            </Button>
-          </CardContent>
-        </Card>
-      ) : (
-        <div className="grid grid-cols-1 gap-4">
-          {trips.map((trip) => (
-            <Card key={trip.id} className="hover:shadow-md transition-shadow">
-              <CardContent className="p-6">
-                <div className="flex items-start justify-between mb-4">
-                  <div className="flex-1">
-                    <div className="flex items-center gap-3 mb-2">
-                      <Plane className="w-5 h-5 text-teal-600" />
-                      <h3 className="text-xl">
-                        {trip.airline} {trip.flightNumber && `- ${trip.flightNumber}`}
-                      </h3>
-                      {trip.openToGroupMatching && (
-                        <Badge className="bg-cyan-500">
-                          <Users className="w-3 h-3 mr-1" />
-                          Group Trip
-                        </Badge>
-                      )}
-                    </div>
-                    <div className="flex items-center gap-2 text-muted-foreground text-sm">
-                      <MapPin className="w-4 h-4" />
-                      <span>{trip.departureAirport} → {trip.arrivalAirport}</span>
-                    </div>
-                  </div>
-                  <div className="flex gap-2">
-                    <Button variant="ghost" size="sm" onClick={() => handleEditTrip(trip)}>
-                      <Edit className="w-4 h-4" />
-                    </Button>
-                    <Button 
-                      variant="ghost" 
-                      size="sm" 
-                      onClick={() => handleDeleteTrip(trip.id)}
-                      className="text-red-600 hover:text-red-700 hover:bg-red-50"
-                    >
-                      <Trash2 className="w-4 h-4" />
-                    </Button>
-                  </div>
-                </div>
-
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                  {/* Departure */}
-                  <div className="flex items-center gap-2">
-                    <Calendar className="w-4 h-4 text-muted-foreground" />
-                    <div>
-                      <p className="text-sm text-muted-foreground">Departure</p>
-                      <p className="font-medium">{trip.departureDate}</p>
-                      <p className="text-sm">{trip.departureTime}</p>
-                    </div>
-                  </div>
-
-                  {/* Arrival */}
-                  {trip.arrivalDate && (
-                    <div className="flex items-center gap-2">
-                      <Clock className="w-4 h-4 text-muted-foreground" />
-                      <div>
-                        <p className="text-sm text-muted-foreground">Arrival</p>
-                        <p className="font-medium">{trip.arrivalDate}</p>
-                        {trip.arrivalTime && <p className="text-sm">{trip.arrivalTime}</p>}
-                      </div>
-                    </div>
-                  )}
-
-                  {/* Leave College */}
-                  {trip.leaveCollegeTime && (
-                    <div className="flex items-center gap-2">
-                      {getTransportIcon(trip.transportMode)}
-                      <div>
-                        <p className="text-sm text-muted-foreground">Leaving College</p>
-                        <p className="font-medium">{trip.leaveCollegeTime}</p>
-                        <p className="text-sm capitalize">{trip.transportMode}</p>
-                      </div>
-                    </div>
-                  )}
-                </div>
-
-                {/* Group Info */}
-                {trip.openToGroupMatching && (
-                  <div className="mt-4 pt-4 border-t">
-                    <div className="flex items-center gap-4 text-sm">
-                      <div className="flex items-center gap-2">
-                        <Users className="w-4 h-4 text-muted-foreground" />
-                        <span>{trip.openSeats} open seat{trip.openSeats > 1 ? 's' : ''}</span>
-                      </div>
-                      <div className="flex items-center gap-2">
-                        <span className="text-muted-foreground">Max group:</span>
-                        <span>{trip.maxGroupSize} people</span>
-                      </div>
-                    </div>
-                  </div>
-                )}
-
-                {/* Notes */}
-                {trip.notes && (
-                  <div className="mt-4 pt-4 border-t">
-                    <p className="text-sm text-muted-foreground">{trip.notes}</p>
-                  </div>
-                )}
-              </CardContent>
-            </Card>
-          ))}
-        </div>
-      )}
     </div>
   );
 }
