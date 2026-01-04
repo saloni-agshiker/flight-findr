@@ -102,7 +102,6 @@ export function TripsPage() {
         if (!res.ok) throw new Error("Failed to fetch trips");
         const data = await res.json();
         setTrips(data);
-        console.log(data);
       } catch (err) {
         alert(err.message);
         setTrips([]);
@@ -146,6 +145,7 @@ export function TripsPage() {
         const data = await res.json();
         if (!res.ok) throw new Error(data.message || "Cannot add trip");
         setNewTripData(initialTripData);
+        setTrips(prevTrips => [...prevTrips, data]);
         toast.success("Trip added successfully!");
         setDialogOpen(false);
       } catch (err) {
@@ -157,8 +157,23 @@ export function TripsPage() {
     e.preventDefault();
   }
 
-  async function handleDeleteTrip(e) {
-    e.preventDefault();
+  async function handleDeleteTrip(tripId) {
+    const token = localStorage.getItem("token");
+    try {
+        const res = await fetch(`http://localhost:5001/api/trips/trips/${tripId}?userId=${user._id}`, {
+        method: "DELETE",
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${token}`
+        },
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.message || "Error deleting trip");
+      setTrips(prev => prev.filter(trip => trip._id !== tripId));
+      toast.success("Trip deleted successfully!");
+    } catch (err) {
+      alert(err.message);
+    }
   }
 
   return (
@@ -421,7 +436,7 @@ export function TripsPage() {
       ) : (
         <div className="grid grid-cols-1 gap-4">
           {trips.map((trip) => (
-            <Card key={trip.id} className="hover:shadow-md transition-shadow">
+            <Card key={trip._id} className="hover:shadow-md transition-shadow">
               <CardContent className="p-6">
                 <div className="flex items-start justify-between mb-4">
                   <div className="flex-1">
@@ -449,7 +464,7 @@ export function TripsPage() {
                     <Button 
                       variant="ghost" 
                       size="sm" 
-                      onClick={() => handleDeleteTrip(trip.id)}
+                      onClick={() => handleDeleteTrip(trip._id)}
                       className="text-red-600 hover:text-red-700 hover:bg-red-50"
                     >
                       <Trash2 className="w-4 h-4" />
