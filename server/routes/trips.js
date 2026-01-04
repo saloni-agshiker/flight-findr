@@ -88,9 +88,9 @@ router.patch("/trips/:tripId", requireAuth, async (req, res) => {
       "flightNum",
       "depAirport",
       "arrAirport",
-      //"depAt",
-      //"arrAt",
-      //"timeDepToAirport",
+      "depAt",
+      "arrAt",
+      "timeDepToAirport",
       "transportMode"
       ];
 
@@ -99,8 +99,7 @@ router.patch("/trips/:tripId", requireAuth, async (req, res) => {
         if (req.body[key] !== undefined) {
             updates[key] = req.body[key];
         }
-    }
-    
+    }    
     const trip = await Trip.findByIdAndUpdate(
       tripId,
       { $set: updates },

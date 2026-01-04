@@ -34,13 +34,20 @@ function combineDateAndTime(dateStr, timeStr, type) {
 }
 
 // Helper function to split Date object (from MongoDB) to date and time (for front-end React)
-function splitDateAndTime(dateVal, type, isEditing = false) {
+function splitDateAndTime(dateVal, dateType = "reg", type, isEditing = false) {
   if (!dateVal) return "";
   const dateObj = new Date(dateVal);
   if (isNaN(dateObj)) return "";
 
   if (type === "date") {
-    return dateObj.toISOString().split("T")[0]; // YYYY-MM-DD
+    if (dateType === "reg") {
+      return dateObj.toISOString().split("T")[0]; // YYYY-MM-DD
+    } else {
+      const month = String(dateObj.getMonth() + 1).padStart(2, "0"); // months are 0-indexed
+      const day = String(dateObj.getDate()).padStart(2, "0");
+      const year = dateObj.getFullYear();
+      return `${month}-${day}-${year}`;
+    }
   } else if (type === "time") {
     let hours = dateObj.getHours(); // 0-23
     const minutes = String(dateObj.getMinutes()).padStart(2, "0");
@@ -120,7 +127,7 @@ export function TripsPage() {
       }
     }
     fetchTrips();
-  }, []);
+  }, [trips]);
 
   const [newTripData, setNewTripData] = useState(initialTripData);
 
@@ -175,10 +182,10 @@ export function TripsPage() {
         flightNum: trip.flightNum,
         depAirport: trip.depAirport,
         arrAirport: trip.arrAirport,
-        depDate: splitDateAndTime(trip.depAt, "date", true),
-        depTime: splitDateAndTime(trip.depAt, "time", true),
-        arrDate: splitDateAndTime(trip.arrAt, "date", true),
-        arrTime: splitDateAndTime(trip.arrAt, "time", true),
+        depDate: splitDateAndTime(trip.depAt, "reg", "date", true),
+        depTime: splitDateAndTime(trip.depAt, "reg", "time", true),
+        arrDate: splitDateAndTime(trip.arrAt, "reg", "date", true),
+        arrTime: splitDateAndTime(trip.arrAt, "reg", "time", true),
         timeDepToAirport: calculateLeaveTime(trip.depAt, trip.timeDepToAirport, true),
         transportMode: trip.transportMode,
         addNotes: trip.addNotes
@@ -202,16 +209,20 @@ export function TripsPage() {
           depAirport: newTripData.depAirport,
           arrAirport: newTripData.arrAirport,
           transportMode: newTripData.transportMode,
-          //depAt: combineDateAndTime(newTripData.depDate, newTripData.depTime),
-          //arrAt: combineDateAndTime(newTripData.arrDate, newTripData.arrTime),
-          //timeDepToAirport: (timeToMinutes(newTripData.depTime) - timeToMinutes(newTripData.timeDepToAirport)),
+          depAt: combineDateAndTime(newTripData.depDate, newTripData.depTime),
+          arrAt: combineDateAndTime(newTripData.arrDate, newTripData.arrTime),
+          timeDepToAirport: (timeToMinutes(newTripData.depTime) - timeToMinutes(newTripData.timeDepToAirport)),
           addNotes: newTripData.addNotes
         })
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.message || "Update failed");
+      console.log(data);
       toast.success("Trip updated successfully!");
-      setTrips(prevTrips => [...prevTrips, data]);
+      setTrips(prevTrips => prevTrips.map(trip => 
+      trip._id === data._id ? data : trip
+      ));
+      setNewTripData(initialTripData);
       setDialogOpen(false);
       setEditingTrip(false);
     } catch (err) {
@@ -540,8 +551,8 @@ export function TripsPage() {
                     <Calendar className="w-4 h-4 text-muted-foreground" />
                     <div>
                       <p className="text-sm text-muted-foreground">Departure</p>
-                      <p className="font-medium">{splitDateAndTime(trip.depAt, "date")}</p>
-                      <p className="text-sm">{splitDateAndTime(trip.depAt, "time")}</p>
+                      <p className="font-medium">{splitDateAndTime(trip.depAt, "non-reg", "date")}</p>
+                      <p className="text-sm">{splitDateAndTime(trip.depAt, "reg", "time")}</p>
                     </div>
                   </div>
 
@@ -551,8 +562,8 @@ export function TripsPage() {
                       <Clock className="w-4 h-4 text-muted-foreground" />
                       <div>
                         <p className="text-sm text-muted-foreground">Arrival</p>
-                        <p className="font-medium">{splitDateAndTime(trip.arrAt, "date")}</p>
-                        {trip.arrAt && <p className="text-sm">{splitDateAndTime(trip.arrAt, "time")}</p>}
+                        <p className="font-medium">{splitDateAndTime(trip.arrAt, "non-reg", "date")}</p>
+                        {trip.arrAt && <p className="text-sm">{splitDateAndTime(trip.arrAt, "reg", "time")}</p>}
                       </div>
                     </div>
                   )}
