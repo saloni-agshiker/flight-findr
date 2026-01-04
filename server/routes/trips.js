@@ -42,6 +42,13 @@ router.get("/trips", async (req, res) => {
 router.post("/trips", requireAuth, async (req, res) => {
     try {
         const { airline, flightNum, depAirport, arrAirport, depAt, arrAt, timeDepToAirport, transportMode, addNotes } = req.body;
+        console.log(airline);
+        console.log(flightNum);
+        console.log(depAirport);
+        console.log(timeDepToAirport);
+        console.log(depAt);
+        console.log(arrAt);
+        console.log(transportMode);
         if (!airline || !flightNum || !depAirport || !arrAirport || !timeDepToAirport || !depAt || !arrAt || transportMode == null) return res.status(400).json({ message: "Required info is missing."});
         
         console.log(req.userId);

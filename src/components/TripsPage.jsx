@@ -33,8 +33,59 @@ function combineDateAndTime(dateStr, timeStr) {
   return new Date(`${dateStr}T${timeStr}:00`);
 }
 
+// Helper function to split Date object (from MongoDB) to date and time (for front-end React)
+function splitDateAndTime(dateVal, type) {
+  if (!dateVal) return "";
+  const dateObj = new Date(dateVal);
+  if (isNaN(dateObj)) return "";
+
+  if (type === "date") {
+    return dateObj.toISOString().split("T")[0]; // YYYY-MM-DD
+  } else if (type === "time") {
+    let hours = dateObj.getHours();
+    const minutes = String(dateObj.getMinutes()).padStart(2, "0");
+
+    const period = hours >= 12 ? "PM" : "AM";
+    hours = hours % 12 || 12; // convert 0 → 12
+
+    return `${hours}:${minutes} ${period}`;
+  }
+}
+
+// Helper function to calculate time leaving for the airport (readable)
+function calculateLeaveTime(dateVal, minutesBefore) {
+  if (!dateVal) return "";
+
+  const dateObj = new Date(dateVal);
+  if (isNaN(dateObj)) return "";
+
+  // subtract minutes safely
+  dateObj.setMinutes(dateObj.getMinutes() - Number(minutesBefore));
+
+  // format to readable time (e.g. 5:30 PM)
+  return dateObj.toLocaleTimeString([], {
+    hour: "numeric",
+    minute: "2-digit",
+    hour12: true
+  });
+}
+
+const initialTripData = {
+  airline: "",
+  flightNum: "",
+  depAirport: "",
+  arrAirport: "",
+  depDate: "",
+  depTime: "",
+  arrDate: "",
+  arrTime: "",
+  timeDepToAirport: "",
+  transportMode: "",
+  addNotes: ""
+}
+
 export function TripsPage() {
-  const [trips, setTrips] = useState(null);
+  const [trips, setTrips] = useState([]);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editingTrip, setEditingTrip] = useState(null);
   const { user, updateUser } = useAuth();
@@ -51,6 +102,7 @@ export function TripsPage() {
         if (!res.ok) throw new Error("Failed to fetch trips");
         const data = await res.json();
         setTrips(data);
+        console.log(data);
       } catch (err) {
         alert(err.message);
         setTrips([]);
@@ -59,19 +111,7 @@ export function TripsPage() {
     fetchTrips();
   }, []);
 
-  const [newTripData, setNewTripData] = useState(() => ({
-    airline: "",
-    flightNum: "",
-    depAirport: "",
-    arrAirport: "",
-    depDate: "",
-    depTime: "",
-    arrDate: "",
-    arrTime: "",
-    timeDepToAirport: "",
-    transportMode: "",
-    addNotes: ""
-  }));
+  const [newTripData, setNewTripData] = useState(initialTripData);
 
   const getTransportIcon = (mode) => {
     switch (mode) {
@@ -99,13 +139,15 @@ export function TripsPage() {
           transportMode: newTripData.transportMode,
           depAt: combineDateAndTime(newTripData.depDate, newTripData.depTime),
           arrAt: combineDateAndTime(newTripData.arrDate, newTripData.arrTime),
-          timeDepToAirport: (timeToMinutes(newTripData.depAirport) - timeToMinutes(newTripData.timeDepToAirport)),
+          timeDepToAirport: (timeToMinutes(newTripData.depTime) - timeToMinutes(newTripData.timeDepToAirport)),
           addNotes: newTripData.addNotes
         })
         });
         const data = await res.json();
         if (!res.ok) throw new Error(data.message || "Cannot add trip");
+        setNewTripData(initialTripData);
         toast.success("Trip added successfully!");
+        setDialogOpen(false);
       } catch (err) {
         alert(err.message);
       }
@@ -362,6 +404,125 @@ export function TripsPage() {
           </DialogContent>
         </Dialog>
       </div>
+
+      {/* Trips List */}
+      {trips.length === 0 ? (
+        <Card>
+          <CardContent className="flex flex-col items-center justify-center py-16">
+            <Plane className="w-16 h-16 text-muted-foreground mb-4" />
+            <h3 className="text-xl mb-2">No trips yet</h3>
+            <p className="text-muted-foreground mb-4">Add your first trip to start finding travel buddies</p>
+            <Button onClick={() => setDialogOpen(true)}>
+              <Plus className="w-4 h-4 mr-2" />
+              Add Your First Trip
+            </Button>
+          </CardContent>
+        </Card>
+      ) : (
+        <div className="grid grid-cols-1 gap-4">
+          {trips.map((trip) => (
+            <Card key={trip.id} className="hover:shadow-md transition-shadow">
+              <CardContent className="p-6">
+                <div className="flex items-start justify-between mb-4">
+                  <div className="flex-1">
+                    <div className="flex items-center gap-3 mb-2">
+                      <Plane className="w-5 h-5 text-teal-600" />
+                      <h3 className="text-xl">
+                        {trip.airline} {trip.flightNum && `- ${trip.flightNum}`}
+                      </h3>
+                      {trip.openToGroupMatching && (
+                        <Badge className="bg-cyan-500">
+                          <Users className="w-3 h-3 mr-1" />
+                          Group Trip
+                        </Badge>
+                      )}
+                    </div>
+                    <div className="flex items-center gap-2 text-muted-foreground text-sm">
+                      <MapPin className="w-4 h-4" />
+                      <span>{trip.depAirport} → {trip.arrAirport}</span>
+                    </div>
+                  </div>
+                  <div className="flex gap-2">
+                    <Button variant="ghost" size="sm" onClick={() => handleEditTrip(trip)}>
+                      <Edit className="w-4 h-4" />
+                    </Button>
+                    <Button 
+                      variant="ghost" 
+                      size="sm" 
+                      onClick={() => handleDeleteTrip(trip.id)}
+                      className="text-red-600 hover:text-red-700 hover:bg-red-50"
+                    >
+                      <Trash2 className="w-4 h-4" />
+                    </Button>
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                  {/* Departure */}
+                  <div className="flex items-center gap-2">
+                    <Calendar className="w-4 h-4 text-muted-foreground" />
+                    <div>
+                      <p className="text-sm text-muted-foreground">Departure</p>
+                      <p className="font-medium">{splitDateAndTime(trip.depAt, "date")}</p>
+                      <p className="text-sm">{splitDateAndTime(trip.depAt, "time")}</p>
+                    </div>
+                  </div>
+
+                  {/* Arrival */}
+                  {trip.arrAt && (
+                    <div className="flex items-center gap-2">
+                      <Clock className="w-4 h-4 text-muted-foreground" />
+                      <div>
+                        <p className="text-sm text-muted-foreground">Arrival</p>
+                        <p className="font-medium">{splitDateAndTime(trip.arrAt, "date")}</p>
+                        {trip.arrAt && <p className="text-sm">{splitDateAndTime(trip.arrAt, "time")}</p>}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Leave College */}
+                  {trip.timeDepToAirport && (
+                    <div className="flex items-center gap-2">
+                      {getTransportIcon(trip.transportMode)}
+                      <div>
+                        <p className="text-sm text-muted-foreground">Leaving College</p>
+                        <p className="font-medium">{calculateLeaveTime(trip.depAt, trip.timeDepToAirport)}</p>
+                        <p className="text-sm capitalize">{trip.transportMode}</p>
+                      </div>
+                    </div>
+                  )}
+                </div>
+
+                
+                {/* Group Info 
+                {trip.openToGroupMatching && (
+                  <div className="mt-4 pt-4 border-t">
+                    <div className="flex items-center gap-4 text-sm">
+                      <div className="flex items-center gap-2">
+                        <Users className="w-4 h-4 text-muted-foreground" />
+                        <span>{trip.openSeats} open seat{trip.openSeats > 1 ? 's' : ''}</span>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <span className="text-muted-foreground">Max group:</span>
+                        <span>{trip.maxGroupSize} people</span>
+                      </div>
+                    </div>
+                  </div>
+                )}
+                */}
+
+                {/* Notes */}
+                {trip.notes && (
+                  <div className="mt-4 pt-4 border-t">
+                    <p className="text-sm text-muted-foreground">{trip.addNotes}</p>
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+          ))}
+        </div>
+      )}
+
     </div>
   );
 }
