@@ -29,12 +29,12 @@ function timeToMinutes(timeStr) {
 }
 
 // Helper function to combine date and time (from front-end React) to a UTC format used by MongoDB
-function combineDateAndTime(dateStr, timeStr) {
+function combineDateAndTime(dateStr, timeStr, type) {
   return new Date(`${dateStr}T${timeStr}:00`);
 }
 
 // Helper function to split Date object (from MongoDB) to date and time (for front-end React)
-function splitDateAndTime(dateVal, type) {
+function splitDateAndTime(dateVal, type, isEditing = false) {
   if (!dateVal) return "";
   const dateObj = new Date(dateVal);
   if (isNaN(dateObj)) return "";
@@ -42,35 +42,47 @@ function splitDateAndTime(dateVal, type) {
   if (type === "date") {
     return dateObj.toISOString().split("T")[0]; // YYYY-MM-DD
   } else if (type === "time") {
-    let hours = dateObj.getHours();
+    let hours = dateObj.getHours(); // 0-23
     const minutes = String(dateObj.getMinutes()).padStart(2, "0");
 
-    const period = hours >= 12 ? "PM" : "AM";
-    hours = hours % 12 || 12; // convert 0 → 12
-
-    return `${hours}:${minutes} ${period}`;
+    if (isEditing) {
+      // 24-hour format required for <input type="time">
+      return `${String(hours).padStart(2, "0")}:${minutes}`;
+    } else {
+      // 12-hour format with AM/PM for display
+      const period = hours >= 12 ? "PM" : "AM";
+      hours = hours % 12 || 12; // convert 0 → 12
+      return `${hours}:${minutes} ${period}`;
+    }
   }
 }
 
 // Helper function to calculate time leaving for the airport (readable)
-function calculateLeaveTime(dateVal, minutesBefore) {
+function calculateLeaveTime(dateVal, minutesBefore, isEditing = false) {
   if (!dateVal) return "";
 
   const dateObj = new Date(dateVal);
   if (isNaN(dateObj)) return "";
 
-  // subtract minutes safely
+  // Subtract the minutes safely
   dateObj.setMinutes(dateObj.getMinutes() - Number(minutesBefore));
 
-  // format to readable time (e.g. 5:30 PM)
-  return dateObj.toLocaleTimeString([], {
-    hour: "numeric",
-    minute: "2-digit",
-    hour12: true
-  });
+  const hours = dateObj.getHours();
+  const minutes = String(dateObj.getMinutes()).padStart(2, "0");
+
+  if (isEditing) {
+    // 24-hour format for <input type="time">
+    return `${String(hours).padStart(2, "0")}:${minutes}`;
+  } else {
+    // 12-hour format with AM/PM for display
+    const period = hours >= 12 ? "PM" : "AM";
+    const displayHours = hours % 12 || 12; // convert 0 → 12
+    return `${displayHours}:${minutes} ${period}`;
+  }
 }
 
 const initialTripData = {
+  id: "",
   airline: "",
   flightNum: "",
   depAirport: "",
@@ -153,8 +165,58 @@ export function TripsPage() {
       }
   }
 
-  async function handleEditTrip(e) {
-    e.preventDefault();
+  async function handleEditTrip(trip) {
+    setEditingTrip(true);
+    setDialogOpen(true);
+    setNewTripData(
+      {
+        id: trip._id,
+        airline: trip.airline,
+        flightNum: trip.flightNum,
+        depAirport: trip.depAirport,
+        arrAirport: trip.arrAirport,
+        depDate: splitDateAndTime(trip.depAt, "date", true),
+        depTime: splitDateAndTime(trip.depAt, "time", true),
+        arrDate: splitDateAndTime(trip.arrAt, "date", true),
+        arrTime: splitDateAndTime(trip.arrAt, "time", true),
+        timeDepToAirport: calculateLeaveTime(trip.depAt, trip.timeDepToAirport, true),
+        transportMode: trip.transportMode,
+        addNotes: trip.addNotes
+      }
+    );
+  }
+
+  async function saveTrip() {
+    const token = localStorage.getItem("token");
+    try {
+      const tripId = newTripData.id;
+      const res = await fetch(`http://localhost:5001/api/trips/trips/${tripId}`, {
+        method: "PATCH",
+        headers: {
+          "Content-Type": "application/json", 
+          "Authorization": `Bearer ${token}`
+        },
+        body: JSON.stringify({ 
+          airline: newTripData.airline,
+          flightNum: newTripData.flightNum,
+          depAirport: newTripData.depAirport,
+          arrAirport: newTripData.arrAirport,
+          transportMode: newTripData.transportMode,
+          //depAt: combineDateAndTime(newTripData.depDate, newTripData.depTime),
+          //arrAt: combineDateAndTime(newTripData.arrDate, newTripData.arrTime),
+          //timeDepToAirport: (timeToMinutes(newTripData.depTime) - timeToMinutes(newTripData.timeDepToAirport)),
+          addNotes: newTripData.addNotes
+        })
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.message || "Update failed");
+      toast.success("Trip updated successfully!");
+      setTrips(prevTrips => [...prevTrips, data]);
+      setDialogOpen(false);
+      setEditingTrip(false);
+    } catch (err) {
+      alert(err.message);
+    }
   }
 
   async function handleDeleteTrip(tripId) {
@@ -412,7 +474,7 @@ export function TripsPage() {
               }}>
                 Cancel
               </Button>
-              <Button onClick={handleAddTrip}>
+              <Button onClick={ editingTrip ? saveTrip : handleAddTrip}>
                 {editingTrip ? "Update Trip" : "Add Trip"}
               </Button>
             </div>

@@ -75,4 +75,46 @@ router.delete("/trips/:tripId", requireAuth, async (req, res) => {
   }
 });
 
+// UPDATES a trip associated with the user_id
+router.patch("/trips/:tripId", requireAuth, async (req, res) => {
+  try {
+    const { tripId } = req.params;
+    if (!tripId || !req.userId) {
+      return res.status(400).json({ message: "TripId and UserId are required." });
+    }
+
+    const allowedFields = [
+      "airline",
+      "flightNum",
+      "depAirport",
+      "arrAirport",
+      //"depAt",
+      //"arrAt",
+      //"timeDepToAirport",
+      "transportMode"
+      ];
+
+    const updates = {};
+    for (const key of allowedFields) {
+        if (req.body[key] !== undefined) {
+            updates[key] = req.body[key];
+        }
+    }
+    
+    const trip = await Trip.findByIdAndUpdate(
+      tripId,
+      { $set: updates },
+      { new: true, runValidators: true }
+    );
+
+    if (!trip) {
+      return res.status(404).json({ message: "Trip not found" });
+    }
+
+    return res.json({ trip });
+  } catch (err) {
+    return res.status(500).json({ message: err.message });
+  }
+});
+
 module.exports = router;
