@@ -7,8 +7,9 @@ const mongoose = require("mongoose");
 
 // import routes
 const authRoutes = require("./routes/auth");
-const profileRoutes = require("./routes/users")
+const profileRoutes = require("./routes/users");
 const tripRoutes = require("./routes/trips");
+const browseRoutes = require("./routes/matches");
 
 // creates Express app server instance
 const app = express();
@@ -21,6 +22,7 @@ app.use(express.json());
 app.use("/api/auth", authRoutes);
 app.use("/api/users", profileRoutes);
 app.use("/api/trips", tripRoutes);
+app.use("/api/matches", browseRoutes);
 
 
 // connects to mongodb

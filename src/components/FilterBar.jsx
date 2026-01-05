@@ -2,6 +2,9 @@ import { Search, SlidersHorizontal } from "lucide-react";
 import { Input } from "../ui/input";
 import { Button } from "../ui/button";
 import { Badge } from "../ui/badge";
+import { useAuth } from "../context/AuthContext";
+import { toast } from "sonner";
+import { Label } from "../ui/label";
 import {
   Select,
   SelectContent,
@@ -10,20 +13,16 @@ import {
   SelectValue,
 } from "../ui/select";
 
-
-const destinations = [
-  "All Destinations",
-  "Bali, Indonesia",
-  "Tokyo, Japan",
-  "Paris, France",
-  "Barcelona, Spain",
-  "New York, USA",
-  "Bangkok, Thailand",
-  "Kenya Safari",
-  "Swiss Alps",
-  "Iceland",
-  "Peru"
+const DESTINATIONS = [
+  { label: "All Destinations", value: "ALL" },
+  { label: "Atlanta, GA", value: "ATL" },
+  { label: "Newark, NJ", value: "EWR" },
+  { label: "Dallas, TX", value: "DFW" },
+  { label: "Los Angeles, CA", value: "LAX" },
+  { label: "Orlando, FL", value: "MCO" },
+  { label: "Delhi, India", value: "DEL" },
 ];
+
 
 const travelStyles = [
   "All Styles",
@@ -52,6 +51,15 @@ export function FilterBar({
     onStyleChange("All Styles");
   };
 
+  async function handleDestinationChange(dest) {
+    try {
+      const token = localStorage.getItem("token");
+      const res = await fetch(`http://localhost:5001/api/matches/filterbyDest?${dest}`)
+    } catch (err) {
+      alert(err.message);
+    }
+  };
+
   return (
     <div className="bg-white border-b sticky top-0 z-10 shadow-sm">
       <div className="container mx-auto px-4 py-4">
@@ -74,15 +82,15 @@ export function FilterBar({
             <SlidersHorizontal className="w-4 h-4 text-muted-foreground" />
             <span className="text-sm">Filters:</span>
           </div>
-          
-          <Select value={selectedDestination} onValueChange={onDestinationChange}>
+
+          <Select value={selectedDestination} onValueChange={handleDestinationChange}>
             <SelectTrigger className="w-[180px]">
               <SelectValue placeholder="Destination" />
             </SelectTrigger>
             <SelectContent>
-              {destinations.map((dest) => (
-                <SelectItem key={dest} value={dest}>
-                  {dest}
+              {DESTINATIONS.map((dest) => (
+                <SelectItem key={dest.value} value={dest.value}>
+                  {dest.label}
                 </SelectItem>
               ))}
             </SelectContent>

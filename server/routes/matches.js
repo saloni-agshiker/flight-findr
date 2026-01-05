@@ -1,0 +1,45 @@
+const express = require("express");
+const jwt = require("jsonwebtoken");
+const Trip = require("../models/Trip");
+
+// creates mini Express app (group of routes related to authentication)
+const router = express.Router();
+
+// simple authentication/verification middleware
+function requireAuth(req, res, next) {
+  const authHeader = req.headers.authorization;
+  if (!authHeader) {
+    return res.status(401).json({ message: "No token provided" });
+  }
+
+  const token = authHeader.split(" ")[1];
+  try {
+    const payload = jwt.verify(token, process.env.JWT_SECRET);
+    req.userId = payload.sub;
+    next();
+  } catch (err) {
+    return res.status(401).json({ message: "Invalid token" });
+  }
+}
+
+// GETS the trips with destination dest (that do not belong to current user)
+router.get("/filterByDest", requireAuth, async (req, res) => {
+    try {    
+        const { dest } = req.query;
+        if (!dest) {
+            return res.status(400).json({ message: "Destination airport is required" });
+        }
+        if (!req.userId) {
+            return res.status(401).json({ message: "Unauthorized"});
+        }
+        const trips = await Trip.find({ 
+            userId: { $ne: req.userId }, 
+            arrAirport: dest,
+        })
+        .populate("userId", "name email bio");
+        return res.json(trips);
+    } catch (err) {
+        console.log(err);
+        res.status(500).json({ message: "Server error"});
+    }
+});
