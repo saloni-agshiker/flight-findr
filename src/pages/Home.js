@@ -111,6 +111,7 @@ export default function Home() {
         </section>
 
         {currentPage === "browse" && (
+            <>
             <FilterBar
                 searchQuery={searchQuery}
                 onSearchChange={setSearchQuery}
@@ -119,6 +120,53 @@ export default function Home() {
                 selectedStyle={selectedStyle}
                 onStyleChange={setSelectedStyle}
             />
+            {/* Results Section */}
+            <section className="container mx-auto px-4 py-8">
+                <div className="flex items-center justify-between mb-6">
+                <div>
+                    <h3 className="text-2xl mb-1">
+                    {filteredTravelers.length === mockTravelers.length 
+                        ? "All Travel Buddies" 
+                        : "Search Results"}
+                    </h3>
+                    <p className="text-muted-foreground">
+                    {filteredTravelers.length} {filteredTravelers.length === 1 ? 'traveler' : 'travelers'} found
+                    </p>
+                </div>
+                </div>
+
+                {filteredTravelers.length === 0 ? (
+                <div className="text-center py-16">
+                    <Users className="w-16 h-16 text-muted-foreground mx-auto mb-4" />
+                    <h3 className="text-xl mb-2">No travelers found</h3>
+                    <p className="text-muted-foreground mb-4">
+                    Try adjusting your filters or search query
+                    </p>
+                    <Button 
+                    variant="outline"
+                    onClick={() => {
+                        setSearchQuery("");
+                        setSelectedDestination("All Destinations");
+                        setSelectedStyle("All Styles");
+                    }}
+                    >
+                    Clear All Filters
+                    </Button>
+                </div>
+                ) : (
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+                    {filteredTravelers.map((traveler) => (
+                    <TravelerCard
+                        key={traveler.id}
+                        traveler={traveler}
+                        onConnect={handleConnect}
+                        onViewProfile={handleViewProfile}
+                    />
+                    ))}
+                </div>
+                )}
+            </section>
+            </>
         )}
 
         {currentPage === "trips" && (

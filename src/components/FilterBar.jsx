@@ -52,9 +52,20 @@ export function FilterBar({
   };
 
   async function handleDestinationChange(dest) {
+    onDestinationChange(dest);
     try {
       const token = localStorage.getItem("token");
-      const res = await fetch(`http://localhost:5001/api/matches/filterbyDest?${dest}`)
+      const res = await fetch(`http://localhost:5001/api/matches/filterbyDest?dest=${dest}`, {
+        method: "GET",
+        headers: {
+          "Content-Type": "application/json", 
+          "Authorization": `Bearer ${token}`
+        }
+      });
+
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.message || "Update failed");
+      toast.success(`${data.length} trips found!`);
     } catch (err) {
       alert(err.message);
     }
