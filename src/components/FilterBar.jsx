@@ -51,26 +51,6 @@ export function FilterBar({
     onStyleChange("All Styles");
   };
 
-  async function handleDestinationChange(dest) {
-    onDestinationChange(dest);
-    try {
-      const token = localStorage.getItem("token");
-      const res = await fetch(`http://localhost:5001/api/matches/filterbyDest?dest=${dest}`, {
-        method: "GET",
-        headers: {
-          "Content-Type": "application/json", 
-          "Authorization": `Bearer ${token}`
-        }
-      });
-
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.message || "Update failed");
-      toast.success(`${data.length} trips found!`);
-    } catch (err) {
-      alert(err.message);
-    }
-  };
-
   return (
     <div className="bg-white border-b sticky top-0 z-10 shadow-sm">
       <div className="container mx-auto px-4 py-4">
@@ -94,7 +74,7 @@ export function FilterBar({
             <span className="text-sm">Filters:</span>
           </div>
 
-          <Select value={selectedDestination} onValueChange={handleDestinationChange}>
+          <Select value={selectedDestination} onValueChange={onDestinationChange}>
             <SelectTrigger className="w-[180px]">
               <SelectValue placeholder="Destination" />
             </SelectTrigger>

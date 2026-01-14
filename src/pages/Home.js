@@ -23,6 +23,7 @@ export default function Home() {
    const [currentPage, setCurrentPage] = useState("browse");
 
    // Filter bar states
+   const [filteredTrips, setFilteredTrips] = useState([]);
    const [searchQuery, setSearchQuery] = useState("");
    const [selectedDestination, setSelectedDestination] = useState("");
    const [selectedStyle, setSelectedStyle] = useState("");
@@ -35,6 +36,37 @@ export default function Home() {
         logout();
         toast.success(`Successfully logged out!`);
         navigate("/");
+    }
+
+    async function handleDestinationChange(dest) {
+        setSelectedDestination(dest);
+        try {
+        const token = localStorage.getItem("token");
+        const res = await fetch(`http://localhost:5001/api/matches/filterbyDest?dest=${dest}`, {
+            method: "GET",
+            headers: {
+            "Content-Type": "application/json", 
+            "Authorization": `Bearer ${token}`
+            }
+        });
+
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.message || "Update failed");
+        toast.success(`${data.length} trips found!`);
+        console.log(data);  // DELETE AFTER DEBUGGING
+        console.log(data.length); // DELETE AFTER DEBUGGING
+        setFilteredTrips(data);
+        } catch (err) {
+            alert(err.message);
+        }
+    };
+
+    async function handleConnect() {
+        toast.success("Connected!");
+    }
+
+    async function handleViewProfile() {
+        toast.success("View Profile!");
     }
 
     return (
@@ -116,7 +148,7 @@ export default function Home() {
                 searchQuery={searchQuery}
                 onSearchChange={setSearchQuery}
                 selectedDestination={selectedDestination}
-                onDestinationChange={setSelectedDestination}
+                onDestinationChange={handleDestinationChange}
                 selectedStyle={selectedStyle}
                 onStyleChange={setSelectedStyle}
             />
@@ -125,17 +157,15 @@ export default function Home() {
                 <div className="flex items-center justify-between mb-6">
                 <div>
                     <h3 className="text-2xl mb-1">
-                    {filteredTravelers.length === mockTravelers.length 
-                        ? "All Travel Buddies" 
-                        : "Search Results"}
+                    All travel buddies
                     </h3>
                     <p className="text-muted-foreground">
-                    {filteredTravelers.length} {filteredTravelers.length === 1 ? 'traveler' : 'travelers'} found
+                    {filteredTrips.length} {filteredTrips.length === 1 ? 'traveler' : 'travelers'} found
                     </p>
                 </div>
                 </div>
 
-                {filteredTravelers.length === 0 ? (
+                {filteredTrips.length === 0 ? (
                 <div className="text-center py-16">
                     <Users className="w-16 h-16 text-muted-foreground mx-auto mb-4" />
                     <h3 className="text-xl mb-2">No travelers found</h3>
@@ -155,7 +185,7 @@ export default function Home() {
                 </div>
                 ) : (
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-                    {filteredTravelers.map((traveler) => (
+                    {filteredTrips.map((traveler) => (
                     <TravelerCard
                         key={traveler.id}
                         traveler={traveler}

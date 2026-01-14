@@ -36,7 +36,7 @@ router.get("/filterByDest", requireAuth, async (req, res) => {
             userId: { $ne: req.userId }, 
             arrAirport: dest,
         })
-        .populate("userId", "name email bio");
+        .populate("userId", "name email bio residence college");
         return res.json(trips);
     } catch (err) {
         console.log(err);
