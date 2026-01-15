@@ -15,6 +15,21 @@ export function TravelerCard({ traveler, onConnect, onViewProfile }) {
     DEL: "Delhi, India",
   };
 
+  const MONTH_MAP = {
+    "01": "Jan",
+    "02": "Feb",
+    "03": "Mar",
+    "04": "Apr",
+    "05": "May",
+    "06": "Jun",
+    "07": "Jul",
+    "08": "Aug",
+    "09": "Sept",
+    "10": "Oct",
+    "11": "Nov",
+    "12": "Dec"
+  };
+
   async function onViewProfile(e) {
     console.log(e);
   }
@@ -32,7 +47,7 @@ export function TravelerCard({ traveler, onConnect, onViewProfile }) {
         const month = String(dateObj.getMonth() + 1).padStart(2, "0"); // months are 0-indexed
         const day = String(dateObj.getDate()).padStart(2, "0");
         const year = dateObj.getFullYear();
-        return `${month}-${day}-${year}`;
+        return `${MONTH_MAP[month]} ${day}, ${year}`;
       }
     } else if (type === "time") {
       let hours = dateObj.getHours(); // 0-23

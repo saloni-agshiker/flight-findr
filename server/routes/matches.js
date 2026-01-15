@@ -44,4 +44,26 @@ router.get("/filterByDest", requireAuth, async (req, res) => {
     }
 });
 
+// GETS the trips with transport mode mode (that do not belong to current user)
+router.get("/filterByMode", requireAuth, async (req, res) => {
+  try {    
+      const { mode } = req.query;
+      if (!mode) {
+          return res.status(400).json({ message: "Transport mode is required" });
+      }
+      if (!req.userId) {
+          return res.status(401).json({ message: "Unauthorized"});
+      }
+      const trips = await Trip.find({ 
+          userId: { $ne: req.userId },
+          transportMode: mode,
+      })
+      .populate("userId", "name email bio residence college");
+      return res.json(trips);
+  } catch (err) {
+      console.log(err);
+      res.status(500).json({ message: "Server error"});
+  }
+});
+
 module.exports = router;

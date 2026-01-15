@@ -24,16 +24,12 @@ const DESTINATIONS = [
 ];
 
 
-const travelStyles = [
-  "All Styles",
-  "Adventure",
-  "Luxury",
-  "Budget",
-  "Backpacking",
-  "Cultural",
-  "Relaxation",
-  "Photography",
-  "Foodie"
+const TRANSPORT_MODES = [
+  "All transport modes",
+  "Personal car",
+  "Rideshare",
+  "Public transit",
+  "Other",
 ];
 
 export function FilterBar({
@@ -41,14 +37,14 @@ export function FilterBar({
   onSearchChange,
   selectedDestination,
   onDestinationChange,
-  selectedStyle,
-  onStyleChange
+  selectedTransportMode,
+  onSelectedTransportMode
 }) {
-  const hasActiveFilters = selectedDestination !== "All Destinations" || selectedStyle !== "All Styles";
+  const hasActiveFilters = selectedDestination !== "All Destinations" || selectedTransportMode !== "All Transport Modes";
 
   const clearFilters = () => {
     onDestinationChange("All Destinations");
-    onStyleChange("All Styles");
+    onSelectedTransportMode("All Transport Modes");
   };
 
   return (
@@ -87,14 +83,14 @@ export function FilterBar({
             </SelectContent>
           </Select>
 
-          <Select value={selectedStyle} onValueChange={onStyleChange}>
+          <Select value={selectedTransportMode} onValueChange={onSelectedTransportMode}>
             <SelectTrigger className="w-[180px]">
-              <SelectValue placeholder="Travel Style" />
+              <SelectValue placeholder="Mode of Transport" />
             </SelectTrigger>
             <SelectContent>
-              {travelStyles.map((style) => (
-                <SelectItem key={style} value={style}>
-                  {style}
+              {TRANSPORT_MODES.map((mode) => (
+                <SelectItem key={mode} value={mode}>
+                  {mode}
                 </SelectItem>
               ))}
             </SelectContent>

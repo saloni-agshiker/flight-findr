@@ -26,7 +26,7 @@ export default function Home() {
    const [filteredTrips, setFilteredTrips] = useState([]);
    const [searchQuery, setSearchQuery] = useState("");
    const [selectedDestination, setSelectedDestination] = useState("");
-   const [selectedStyle, setSelectedStyle] = useState("");
+   const [selectedTransportMode, setSelectedTransportMode] = useState("");
 
    // Profile page states
    const [profileDialogOpen, setProfileDialogOpen] = useState(false);
@@ -41,23 +41,41 @@ export default function Home() {
     async function handleDestinationChange(dest) {
         setSelectedDestination(dest);
         try {
-        const token = localStorage.getItem("token");
-        const res = await fetch(`http://localhost:5001/api/matches/filterbyDest?dest=${dest}`, {
-            method: "GET",
-            headers: {
-            "Content-Type": "application/json", 
-            "Authorization": `Bearer ${token}`
-            }
+            const token = localStorage.getItem("token");
+            const res = await fetch(`http://localhost:5001/api/matches/filterByDest?dest=${dest}`, {
+                method: "GET",
+                headers: {
+                "Content-Type": "application/json", 
+                "Authorization": `Bearer ${token}`
+                }
         });
 
         const data = await res.json();
         if (!res.ok) throw new Error(data.message || "Update failed");
         toast.success(`${data.length} trips found!`);
-        console.log(data);  // DELETE AFTER DEBUGGING
-        console.log(data.length); // DELETE AFTER DEBUGGING
         setFilteredTrips(data);
         } catch (err) {
             alert(err.message);
+        }
+    };
+
+    async function handleModeChange(mode) {
+        setSelectedTransportMode(mode);
+        try {
+            const token = localStorage.getItem("token");
+            const res = await fetch(`http://localhost:5001/api/matches/filterByMode?mode=${mode}`, {
+                method: "GET",
+                headers: {
+                "Content-Type": "application/json", 
+                "Authorization": `${token}`
+                }
+            }); 
+            const data = await res.json();
+            if (!res.ok) throw new Error(data.message || "Update failed");
+            toast.success(`${data.length} trips found!`);
+            setFilteredTrips(data);
+        } catch (err) {
+            alert(err.message)
         }
     };
 
@@ -149,8 +167,8 @@ export default function Home() {
                 onSearchChange={setSearchQuery}
                 selectedDestination={selectedDestination}
                 onDestinationChange={handleDestinationChange}
-                selectedStyle={selectedStyle}
-                onStyleChange={setSelectedStyle}
+                selectedTransportMode={selectedTransportMode}
+                onSelectedTransportMode={handleModeChange}
             />
             {/* Results Section */}
             <section className="container mx-auto px-4 py-8">
@@ -177,7 +195,7 @@ export default function Home() {
                     onClick={() => {
                         setSearchQuery("");
                         setSelectedDestination("All Destinations");
-                        setSelectedStyle("All Styles");
+                        setSelectedTransportMode("All Transport Modes");
                     }}
                     >
                     Clear All Filters
