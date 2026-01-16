@@ -38,45 +38,36 @@ export default function Home() {
         navigate("/");
     }
 
-    async function handleDestinationChange(dest) {
-        setSelectedDestination(dest);
+    async function fetchFilteredTrips(dest, mode) {
         try {
             const token = localStorage.getItem("token");
-            const res = await fetch(`http://localhost:5001/api/matches/filterByDest?dest=${dest}`, {
+            const params = new URLSearchParams();
+            if (dest) params.append("dest", dest);
+            if (mode) params.append("mode", mode);
+            const res = await fetch(`http://localhost:5001/api/matches/filter?${params.toString()}`, {
                 method: "GET",
                 headers: {
                 "Content-Type": "application/json", 
                 "Authorization": `Bearer ${token}`
                 }
-        });
-
-        const data = await res.json();
-        if (!res.ok) throw new Error(data.message || "Update failed");
-        toast.success(`${data.length} trips found!`);
-        setFilteredTrips(data);
-        } catch (err) {
-            alert(err.message);
-        }
-    };
-
-    async function handleModeChange(mode) {
-        setSelectedTransportMode(mode);
-        try {
-            const token = localStorage.getItem("token");
-            const res = await fetch(`http://localhost:5001/api/matches/filterByMode?mode=${mode}`, {
-                method: "GET",
-                headers: {
-                "Content-Type": "application/json", 
-                "Authorization": `${token}`
-                }
-            }); 
+            });
             const data = await res.json();
             if (!res.ok) throw new Error(data.message || "Update failed");
             toast.success(`${data.length} trips found!`);
             setFilteredTrips(data);
         } catch (err) {
-            alert(err.message)
+            alert(err.message);
         }
+    }
+
+    async function handleDestinationChange(dest) {
+        setSelectedDestination(dest);
+        fetchFilteredTrips(dest, selectedTransportMode);
+    };
+
+    async function handleModeChange(mode) {
+        setSelectedTransportMode(mode);
+        fetchFilteredTrips(selectedDestination, mode);
     };
 
     async function handleConnect() {

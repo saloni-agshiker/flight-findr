@@ -22,21 +22,25 @@ function requireAuth(req, res, next) {
   }
 }
 
-// GETS the trips with destination dest (that do not belong to current user)
-router.get("/filterByDest", requireAuth, async (req, res) => {
-    try {    
-        const { dest } = req.query;
-        if (!dest) {
-            return res.status(400).json({ message: "Destination airport is required" });
-        }
+// GETS the trips with destination dest and/or transport mode mode (that do not belong to current user)
+router.get("/filter", requireAuth, async (req, res) => {
+    try {
         if (!req.userId) {
             return res.status(401).json({ message: "Unauthorized"});
         }
-        const trips = await Trip.find({ 
-            userId: { $ne: req.userId }, 
-            arrAirport: dest,
-        })
-        .populate("userId", "name email bio residence college");
+
+        const query = {
+            userId: { $ne: req.userId }
+        }
+
+        if (req.query.dest) {
+            query.depAirport = req.query.dest;
+        };
+
+        if (req.query.mode) {
+            query.transportMode = req.query.mode;
+        };
+        const trips = await Trip.find(query).populate("userId", "name email bio residence college");
         return res.json(trips);
     } catch (err) {
         console.log(err);
