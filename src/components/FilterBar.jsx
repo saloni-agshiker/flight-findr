@@ -25,11 +25,11 @@ const DESTINATIONS = [
 
 
 const TRANSPORT_MODES = [
-  "All transport modes",
-  "Personal car",
-  "Rideshare",
-  "Public transit",
-  "Other",
+  { label: "All transport modes", value: "ALL" },
+  { label: "Personal car", value: "Personal car" },
+  { label: "Rideshare", value: "Rideshare" } ,
+  { label: "Public transit", value: "Public transit" },
+  { label: "Other", value: "Other" }
 ];
 
 export function FilterBar({
@@ -40,7 +40,7 @@ export function FilterBar({
   selectedTransportMode,
   onSelectedTransportMode
 }) {
-  const hasActiveFilters = selectedDestination !== "All Destinations" || selectedTransportMode !== "All Transport Modes";
+  const hasActiveFilters = selectedDestination !== "ALL" || selectedTransportMode !== "ALL";
 
   const clearFilters = () => {
     onDestinationChange("All Destinations");
@@ -89,18 +89,12 @@ export function FilterBar({
             </SelectTrigger>
             <SelectContent>
               {TRANSPORT_MODES.map((mode) => (
-                <SelectItem key={mode} value={mode}>
-                  {mode}
+                <SelectItem key={mode.value} value={mode.value}>
+                  {mode.label}
                 </SelectItem>
               ))}
             </SelectContent>
           </Select>
-
-          {hasActiveFilters && (
-            <Button variant="ghost" size="sm" onClick={clearFilters}>
-              Clear filters
-            </Button>
-          )}
         </div>
       </div>
     </div>

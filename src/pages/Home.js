@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Plane, MapPin, Users, Heart, LogOut, User, Briefcase, MessageCircle, Settings } from "lucide-react";
 import { TravelerCard, Traveler } from "../components/TravelerCard";
 import { ProfileDialog } from "../components/ProfileDialog";
@@ -25,8 +25,8 @@ export default function Home() {
    // Filter bar states
    const [filteredTrips, setFilteredTrips] = useState([]);
    const [searchQuery, setSearchQuery] = useState("");
-   const [selectedDestination, setSelectedDestination] = useState("");
-   const [selectedTransportMode, setSelectedTransportMode] = useState("");
+   const [selectedDestination, setSelectedDestination] = useState("ALL");
+   const [selectedTransportMode, setSelectedTransportMode] = useState("ALL");
 
    // Profile page states
    const [profileDialogOpen, setProfileDialogOpen] = useState(false);
@@ -60,14 +60,47 @@ export default function Home() {
         }
     }
 
+    useEffect(() => {
+        async function fetchTrips() {
+            try {
+                const token = localStorage.getItem("token");
+                const hasFilters = (selectedDestination && selectedDestination !== "ALL")|| (selectedTransportMode && selectedTransportMode !== "ALL");
+
+                const url = hasFilters
+                    ? `http://localhost:5001/api/matches/filter?${new URLSearchParams({
+                        ...(selectedDestination && { dest: selectedDestination }),
+                        ...(selectedTransportMode && { mode: selectedTransportMode })
+                    }).toString()}`
+                    : `http://localhost:5001/api/matches/allMatches`;
+
+                console.log(url);
+                const res = await fetch(url, {
+                    method: "GET",
+                    headers: {
+                        "Content-Type": "application/json",
+                        Authorization: `Bearer ${token}`
+                    }
+                });
+        
+                const data = await res.json();
+                if (!res.ok) throw new Error(data.message || "Update failed");
+                toast.success(`${data.length} trips found!`);
+                setFilteredTrips(data);
+            } catch (err) {
+                alert(err.message);
+            }
+        }
+        fetchTrips();
+      }, [selectedDestination, selectedTransportMode]);
+
     async function handleDestinationChange(dest) {
         setSelectedDestination(dest);
-        fetchFilteredTrips(dest, selectedTransportMode);
+        //fetchFilteredTrips(dest, selectedTransportMode);
     };
 
     async function handleModeChange(mode) {
         setSelectedTransportMode(mode);
-        fetchFilteredTrips(selectedDestination, mode);
+        //fetchFilteredTrips(selectedDestination, mode);
     };
 
     async function handleConnect() {
@@ -187,6 +220,7 @@ export default function Home() {
                         setSearchQuery("");
                         setSelectedDestination("All Destinations");
                         setSelectedTransportMode("All Transport Modes");
+                        //fetchAllTrips();
                     }}
                     >
                     Clear All Filters

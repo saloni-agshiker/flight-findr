@@ -70,4 +70,22 @@ router.get("/filterByMode", requireAuth, async (req, res) => {
   }
 });
 
+// GETS the trips associated that have not occurred yet (for all destinations & all transport modes)
+router.get("/allMatches", requireAuth, async (req, res) => {
+    try {
+        if (!req.userId) {
+          return res.status(401).json({ message: "Unauthorized"});
+        }
+        const today = new Date();
+        const trips = await Trip.find({ 
+          userId: { $ne: req.userId },
+          depAt: { $gt: today }
+        }).sort( { depAt: 1 }).populate("userId", "name email bio residence college");
+        return res.json(trips);
+    } catch (err) {
+        console.log(err);
+        res.status(500).json(err);
+    }
+});
+
 module.exports = router;
